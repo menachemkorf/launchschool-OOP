@@ -56,7 +56,7 @@ class Human < Player
     n = nil
     loop do
       puts "What's your name?"
-      n = gets.chomp
+      n = gets.chomp.strip
       break unless n.empty?
       puts "Sorry, must enter a value."
     end

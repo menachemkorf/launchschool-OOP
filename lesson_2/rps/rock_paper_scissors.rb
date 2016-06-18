@@ -77,9 +77,7 @@ class Computer < Player
 end
 
 class RPSGame
-  POINTS_TO_WIN = 2
-
-  attr_accessor :human, :computer
+  attr_accessor :human, :computer, :points_to_win
 
   def initialize
     @human = Human.new
@@ -108,6 +106,13 @@ class RPSGame
 
   def display_welcome_message
     puts "Welcome to Rock, Paper, Scissors!"
+    loop do
+      puts "How many points do you want to play for?"
+      self.points_to_win = gets.chomp.to_i
+      break if points_to_win > 0
+      puts "Invalid option!"
+    end
+    puts "Ok, so whoever gets #{points_to_win} points first wins."
   end
 
   def display_goodbye_message
@@ -132,23 +137,17 @@ class RPSGame
   end
 
   def display_round(winner)
-    if winner == human
-      puts "#{human.name} won!"
-    elsif winner == computer
-      puts "#{computer.name} won!"
-    else
-      puts "It's a tie!"
-    end
+    puts winner ? "#{winner.name} won!" : "It's a tie!"
     puts "#{human.name} = #{human.score}"
     puts "#{computer.name} = #{computer.score}"
   end
 
   def game_over?
-    human.score == POINTS_TO_WIN || computer.score == POINTS_TO_WIN
+    human.score == points_to_win || computer.score == points_to_win
   end
 
   def display_winner
-    if human.score == POINTS_TO_WIN
+    if human.score == points_to_win
       puts "#{human.name} won the game!"
     else
       puts "#{computer.name} won the game!"

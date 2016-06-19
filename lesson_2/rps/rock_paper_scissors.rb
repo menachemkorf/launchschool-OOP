@@ -1,31 +1,27 @@
 # frozen_string_literal: true
 class Move
-  VALUES = ['rock', 'paper', 'scissors'].freeze
+  VALUES = { 'r' => 'rock',
+             'p' => 'paper',
+             's' => 'scissors',
+             'l' => 'lizard',
+             'sp' => 'spock' }.freeze
+  WINNING_MOVES = { 'rock'     => %w(scissors lizard),
+                     'paper'    => %w(rock spock),
+                     'scissors' => %w(paper lizard),
+                     'lizard'   => %w(paper spock),
+                     'spock'    => %w(rock scissors) }.freeze
+  attr_accessor :value
 
   def initialize(value)
-    @value = value
-  end
-
-  def rock?
-    @value == 'rock'
-  end
-
-  def paper?
-    @value == 'paper'
-  end
-
-  def scissors?
-    @value == 'scissors'
+    self.value = value
   end
 
   def >(other_move)
-    (rock? && other_move.scissors?) ||
-      (paper? && other_move.rock?) ||
-      (scissors? && other_move.paper?)
+    WINNING_MOVES[value].include?(other_move.value)
   end
 
   def to_s
-    @value
+    value
   end
 end
 
@@ -42,11 +38,26 @@ class Human < Player
   def choose
     choice = nil
     loop do
-      puts "Please choose rock, paper, scissors:"
+
+      # msg
+      puts "Please choose one:"
+      Move::VALUES.each do |initial, value|
+        puts "#{initial}. #{value}"
+      end
+      # input
       choice = gets.chomp
-      break if Move::VALUES.include? choice
-      puts "Invalid option!"
+
+      # validate
+      if Move::VALUES.flatten.include?(choice)
+        Move::VALUES.each do |initial, value|
+          choice = value if choice == initial
+        end
+        break
+      else
+        puts "Invalid option!"
+      end
     end
+    # make move
     self.move = Move.new(choice)
   end
 
@@ -66,7 +77,7 @@ end
 
 class Computer < Player
   def choose
-    self.move = Move.new(Move::VALUES.sample)
+    self.move = Move.new(Move::VALUES.values.sample)
   end
 
   private

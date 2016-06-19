@@ -6,10 +6,10 @@ class Move
              'l' => 'lizard',
              'sp' => 'spock' }.freeze
   WINNING_MOVES = { 'rock'     => %w(scissors lizard),
-                     'paper'    => %w(rock spock),
-                     'scissors' => %w(paper lizard),
-                     'lizard'   => %w(paper spock),
-                     'spock'    => %w(rock scissors) }.freeze
+                    'paper'    => %w(rock spock),
+                    'scissors' => %w(paper lizard),
+                    'lizard'   => %w(paper spock),
+                    'spock'    => %w(rock scissors) }.freeze
   attr_accessor :value
 
   def initialize(value)
@@ -38,8 +38,7 @@ class Human < Player
   def choose
     choice = nil
     loop do
-
-      # msg
+      # prompt
       puts "Please choose one:"
       Move::VALUES.each do |initial, value|
         puts "#{initial}. #{value}"
@@ -47,11 +46,9 @@ class Human < Player
       # input
       choice = gets.chomp
 
-      # validate
+      # validate/format
       if Move::VALUES.flatten.include?(choice)
-        Move::VALUES.each do |initial, value|
-          choice = value if choice == initial
-        end
+        choice = Move::VALUES[choice] if Move::VALUES.keys.include?(choice)
         break
       else
         puts "Invalid option!"

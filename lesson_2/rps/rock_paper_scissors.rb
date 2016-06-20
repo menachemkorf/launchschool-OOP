@@ -27,6 +27,7 @@ end
 
 class Player
   attr_accessor :move, :name, :score
+  attr_reader :history
 
   def initialize
     set_name
@@ -123,6 +124,7 @@ class RPSGame
         break if game_over?
       end
       display_winner
+      display_history
       break unless play_again?
     end
     display_goodbye_message
@@ -180,6 +182,14 @@ class RPSGame
       puts "#{human} won the game!"
     else
       puts "#{computer} won the game!"
+    end
+  end
+
+  def display_history
+    puts "#{human.to_s.center(10)} | #{computer.to_s.center(10)}"
+    puts "".center(10+3+10, '-')
+    human.history.size.times do |number|
+      puts "#{human.history[number].center(10)} | #{computer.history[number].center(10)}"
     end
   end
 

@@ -31,6 +31,11 @@ class Player
   def initialize
     set_name
     self.score = 0
+    @history = []
+  end
+
+  def to_s
+    name
   end
 end
 
@@ -38,24 +43,19 @@ class Human < Player
   def choose
     choice = nil
     loop do
-      # prompt
-      puts "Please choose one:"
-      Move::VALUES.each do |initial, value|
-        puts "#{initial}. #{value}"
-      end
-      # input
+      prompt_choice
       choice = gets.chomp
 
-      # validate/format
-      if Move::VALUES.flatten.include?(choice)
-        choice = Move::VALUES[choice] if Move::VALUES.keys.include?(choice)
+      if valid?(choice)
+        choice = formatted(choice)
         break
       else
         puts "Invalid option!"
       end
     end
-    # make move
+
     self.move = Move.new(choice)
+    @history << move.value
   end
 
   private
@@ -70,11 +70,28 @@ class Human < Player
     end
     self.name = n
   end
+
+  def prompt_choice
+    puts "Please choose one:"
+    Move::VALUES.each do |initial, value|
+      puts "#{initial}. #{value}"
+    end
+  end
+
+  def valid?(choice)
+    Move::VALUES.flatten.include?(choice)
+  end
+
+  def formatted(choice)
+    choice = Move::VALUES[choice] if Move::VALUES.keys.include?(choice)
+    choice
+  end
 end
 
 class Computer < Player
   def choose
     self.move = Move.new(Move::VALUES.values.sample)
+    @history << move.value
   end
 
   private
@@ -94,6 +111,7 @@ class RPSGame
 
   def play
     display_welcome_message
+    set_rounds
     loop do
       loop do
         human.choose
@@ -114,13 +132,6 @@ class RPSGame
 
   def display_welcome_message
     puts "Welcome to Rock, Paper, Scissors!"
-    loop do
-      puts "How many points do you want to play for?"
-      self.points_to_win = gets.chomp.to_i
-      break if points_to_win > 0
-      puts "Invalid option!"
-    end
-    puts "Ok, so whoever gets #{points_to_win} points first wins."
   end
 
   def display_goodbye_message
@@ -128,8 +139,18 @@ class RPSGame
   end
 
   def display_moves
-    puts "#{human.name} chose #{human.move}"
-    puts "#{computer.name} chose #{computer.move}"
+    puts "#{human} chose #{human.move}"
+    puts "#{computer} chose #{computer.move}"
+  end
+
+  def set_rounds
+    loop do
+      puts "How many points do you want to play for?"
+      self.points_to_win = gets.chomp.to_i
+      break if points_to_win > 0
+      puts "Invalid option!"
+    end
+    puts "Ok, so whoever gets #{points_to_win} points first wins."
   end
 
   def detect_result
@@ -145,9 +166,9 @@ class RPSGame
   end
 
   def display_round(winner)
-    puts winner ? "#{winner.name} won!" : "It's a tie!"
-    puts "#{human.name} = #{human.score}"
-    puts "#{computer.name} = #{computer.score}"
+    puts winner ? "#{winner} won!" : "It's a tie!"
+    puts "#{human} = #{human.score}"
+    puts "#{computer} = #{computer.score}"
   end
 
   def game_over?
@@ -156,9 +177,9 @@ class RPSGame
 
   def display_winner
     if human.score == points_to_win
-      puts "#{human.name} won the game!"
+      puts "#{human} won the game!"
     else
-      puts "#{computer.name} won the game!"
+      puts "#{computer} won the game!"
     end
   end
 

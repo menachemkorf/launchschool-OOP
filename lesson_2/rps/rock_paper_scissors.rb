@@ -187,9 +187,9 @@ class RPSGame
 
   def display_history
     puts "#{human.to_s.center(10)} | #{computer.to_s.center(10)}"
-    puts "".center(10+3+10, '-')
-    human.history.size.times do |number|
-      puts "#{human.history[number].center(10)} | #{computer.history[number].center(10)}"
+    puts "-" * 23
+    human.history.size.times do |i|
+      puts "#{human.history[i].center(10)} | #{computer.history[i].center(10)}"
     end
   end
 

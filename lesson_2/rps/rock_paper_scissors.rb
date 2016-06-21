@@ -102,7 +102,48 @@ class Computer < Player
   end
 end
 
+module Display
+  private
+
+  def display_welcome_message
+    puts "Welcome to Rock, Paper, Scissors!"
+  end
+
+  def display_goodbye_message
+    puts "Thank you for playing Rock, Paper, Scissors. Good bye!"
+  end
+
+  def display_moves
+    puts "#{human} chose #{human.move}"
+    puts "#{computer} chose #{computer.move}"
+  end
+
+  def display_round(winner)
+    puts winner ? "#{winner} won!" : "It's a tie!"
+    puts "#{human} = #{human.score}"
+    puts "#{computer} = #{computer.score}"
+  end
+
+  def display_winner
+    if human.score == points_to_win
+      puts "#{human} won the game!"
+    else
+      puts "#{computer} won the game!"
+    end
+  end
+
+  def display_history
+    puts "#{human.to_s.center(10)} | #{computer.to_s.center(10)}"
+    puts "-" * 23
+    human.history.size.times do |i|
+      puts "#{human.history[i].center(10)} | #{computer.history[i].center(10)}"
+    end
+  end
+end
+
 class RPSGame
+  include Display
+
   attr_accessor :human, :computer, :points_to_win
 
   def initialize
@@ -132,19 +173,6 @@ class RPSGame
 
   private
 
-  def display_welcome_message
-    puts "Welcome to Rock, Paper, Scissors!"
-  end
-
-  def display_goodbye_message
-    puts "Thank you for playing Rock, Paper, Scissors. Good bye!"
-  end
-
-  def display_moves
-    puts "#{human} chose #{human.move}"
-    puts "#{computer} chose #{computer.move}"
-  end
-
   def set_rounds
     loop do
       puts "How many points do you want to play for?"
@@ -167,30 +195,8 @@ class RPSGame
     winner.score += 1 if winner
   end
 
-  def display_round(winner)
-    puts winner ? "#{winner} won!" : "It's a tie!"
-    puts "#{human} = #{human.score}"
-    puts "#{computer} = #{computer.score}"
-  end
-
   def game_over?
     human.score == points_to_win || computer.score == points_to_win
-  end
-
-  def display_winner
-    if human.score == points_to_win
-      puts "#{human} won the game!"
-    else
-      puts "#{computer} won the game!"
-    end
-  end
-
-  def display_history
-    puts "#{human.to_s.center(10)} | #{computer.to_s.center(10)}"
-    puts "-" * 23
-    human.history.size.times do |i|
-      puts "#{human.history[i].center(10)} | #{computer.history[i].center(10)}"
-    end
   end
 
   def play_again?

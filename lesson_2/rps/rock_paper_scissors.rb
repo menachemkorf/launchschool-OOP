@@ -132,9 +132,9 @@ module Display
     end
   end
 
-  def display_history
-    puts "#{human.to_s.center(10)} | #{computer.to_s.center(10)}"
-    puts "-" * 23
+  def display_summary
+    puts "#{human.to_s[0, 8].center(10)} | #{computer.to_s.center(10)}"
+    puts "+".center(23, '-')
     human.history.size.times do |i|
       puts "#{human.history[i].center(10)} | #{computer.history[i].center(10)}"
     end
@@ -165,7 +165,7 @@ class RPSGame
         break if game_over?
       end
       display_winner
-      display_history
+      display_summary
       break unless play_again?
     end
     display_goodbye_message

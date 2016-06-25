@@ -5,11 +5,19 @@ class Move
              's' => 'scissors',
              'l' => 'lizard',
              'sp' => 'spock' }.freeze
+
   WINNING_MOVES = { 'rock'     => %w(scissors lizard),
                     'paper'    => %w(rock spock),
                     'scissors' => %w(paper lizard),
                     'lizard'   => %w(paper spock),
                     'spock'    => %w(rock scissors) }.freeze
+
+  # LOOSING_MOVES = { 'rock'     => %w(paper spock),
+  #                   'paper'    => %w(scissors lizard),
+  #                   'scissors' => %w(rock spock),
+  #                   'lizard'   => %w(rock scissors),
+  #                   'spock'    => %w(paper lizard) }.freeze
+
   attr_accessor :value
 
   def initialize(value)
@@ -26,8 +34,7 @@ class Move
 end
 
 class Player
-  attr_accessor :move, :name, :score
-  attr_reader :history
+  attr_accessor :move, :name, :score, :history
 
   def initialize
     set_name
@@ -138,6 +145,21 @@ module Display
     human.history.size.times do |i|
       puts "#{human.history[i].center(10)} | #{computer.history[i].center(10)}"
     end
+
+    # combined_history = human.history.zip(computer.history)
+    # combined_history.each do |x|
+    #   if x[0] > x[1]
+    #     x << :human
+    #     p x
+    #   elsif x[1] > x[0]
+    #     x << :computer
+    #     p x
+    #   else
+    #     x << :tie
+    #     p x
+    #   end
+    # end
+    # combined_history.each { |x| p x }
   end
 end
 

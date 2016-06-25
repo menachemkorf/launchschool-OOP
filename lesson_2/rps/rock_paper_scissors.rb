@@ -177,6 +177,7 @@ class RPSGame
     display_welcome_message
     set_rounds
     loop do
+      reset_score
       loop do
         human.choose
         computer.choose
@@ -215,6 +216,13 @@ class RPSGame
 
   def update_score!(winner)
     winner.score += 1 if winner
+  end
+
+  def reset_score
+    human.score = 0
+    human.history = []
+    computer.score = 0
+    computer.history = []
   end
 
   def game_over?

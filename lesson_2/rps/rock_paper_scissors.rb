@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+require 'pry'
 class Move
   VALUES = { 'r' => 'rock',
              'p' => 'paper',
@@ -63,7 +64,7 @@ class Human < Player
     end
 
     self.move = Move.new(choice)
-    @history << move.value
+    @history << move
   end
 
   private
@@ -99,7 +100,7 @@ end
 class Computer < Player
   def choose
     self.move = Move.new(Move::VALUES.values.sample)
-    @history << move.value
+    @history << move
   end
 
   private
@@ -140,26 +141,24 @@ module Display
   end
 
   def display_summary
-    puts "#{human.to_s[0, 8].center(10)} | #{computer.to_s.center(10)}"
-    puts "+".center(23, '-')
-    human.history.size.times do |i|
-      puts "#{human.history[i].center(10)} | #{computer.history[i].center(10)}"
-    end
-
-    # combined_history = human.history.zip(computer.history)
-    # combined_history.each do |x|
-    #   if x[0] > x[1]
-    #     x << :human
-    #     p x
-    #   elsif x[1] > x[0]
-    #     x << :computer
-    #     p x
-    #   else
-    #     x << :tie
-    #     p x
-    #   end
+    # puts "#{human.name[0, 8].center(10)} | #{computer.name.center(10)}"
+    # puts "+".center(23, '-')
+    # human.history.size.times do |i|
+    #   puts "#{human.history[i].value.center(10)} | #{computer.history[i].value.center(10)}"
     # end
-    # combined_history.each { |x| p x }
+
+    combined_history = human.history.zip(computer.history)
+    combined_history.each do |x|
+
+      if x[0] > x[1]
+        x << :human
+      elsif x[1] > x[0]
+        x << :computer
+      else
+        x << :tie
+      end
+    end
+    combined_history.each { |x| p x }
   end
 end
 

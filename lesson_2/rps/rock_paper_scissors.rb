@@ -23,7 +23,7 @@ class History
       lost_count[move[0]] += 1
     end
 
-    max = lost_count.max_by { |move, loses| loses }
+    max = lost_count.max_by { |_move, loses| loses }
     max[0] if max
   end
 end
@@ -127,22 +127,17 @@ end
 
 class Computer < Player
   def choose(history)
-    # if :human didn't lose yet move_with_most_loses will return nil
+    # if human didn't lose yet move_with_most_loses will return nil
+    lost_move = nil
     if history.move_with_most_loses
       last_round = history.logs.last
-      if last_round[2] == :computer
-        # lost last move
-        lost_move = last_round[0]
-        self.move = Move.new(filter_moves(lost_move).sample)
-      else
-        # didn't lose last move, check which move lost the most
-        lost_move = history.move_with_most_loses
-        self.move = Move.new(filter_moves(lost_move).sample)
-      end
-    else
-      # didn't lose yet
-      self.move = Move.new(Move::VALUES.values.sample)
+      lost_move = if last_round[2] == :computer
+                    last_round[0]
+                  else
+                    history.move_with_most_loses
+                  end
     end
+    self.move = Move.new(filter_moves(lost_move).sample)
     @player_history << move
   end
 
@@ -152,13 +147,18 @@ class Computer < Player
     self.name = ['R2D2', 'Hal', 'Chappie', 'Sonny', 'Number 5'].sample
   end
 
-  def filter_moves(lost_move)
+  def filter_moves(lost_move = nil)
     # the computer assumes that human won't use lost_move
     # so we reject any move that can beat lost_move to increase the computer's
     # probability of winning
-    Move::VALUES.values.reject do |move|
-      Move::LOOSING_MOVES[lost_move.value].include?(move)
-    end
+    options = if lost_move
+                Move::VALUES.values.reject do |move|
+                  Move::LOOSING_MOVES[lost_move.value].include?(move)
+                end
+              else
+                Move::VALUES.values
+              end
+    options
   end
 end
 

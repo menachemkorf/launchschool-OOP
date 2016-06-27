@@ -81,7 +81,7 @@ class Human < Player
     choice = nil
     loop do
       prompt_choice
-      choice = gets.chomp
+      choice = gets.chomp.downcase
 
       if valid?(choice)
         choice = formatted(choice)
@@ -162,7 +162,7 @@ class Computer < Player
   end
 end
 
-module Display
+module Displayable
   private
 
   def display_welcome_message
@@ -193,29 +193,29 @@ module Display
   end
 
   def display_summary
-    puts "#{human.name[0, 8].center(10)} | #{computer.name.center(10)}"
+    puts table_header
     puts "+".center(23, '-')
-    human.player_history.size.times do |i|
-      puts "#{human.player_history[i].value.center(10)} | #{computer.player_history[i].value.center(10)}"
+    human.player_history.size.times do |n|
+      puts table_row(n)
     end
+  end
 
-    # combined_history = human.player_history.zip(computer.player_history)
-    # combined_history.each do |x|
+  def table_header
+    "#{format(human.name)} | #{format(computer.name)}"
+  end
 
-    #   if x[0] > x[1]
-    #     x << :human
-    #   elsif x[1] > x[0]
-    #     x << :computer
-    #   else
-    #     x << :tie
-    #   end
-    # end
-    # combined_history.each { |x| p x }
+  def table_row(n)
+    "#{format(human.player_history[n].value)} | "\
+    "#{format(computer.player_history[n].value)}"
+  end
+
+  def format(output, length = 10, padding = " ")
+    output[0, length - 2].center(length, padding)
   end
 end
 
 class RPSGame
-  include Display
+  include Displayable
 
   attr_accessor :human, :computer, :points_to_win, :history
 
@@ -300,9 +300,9 @@ class RPSGame
     answer = nil
     loop do
       puts "Would you like to play again? (y/n)"
-      answer = gets.chomp
-      break if ['y', 'n'].include? answer.downcase
-      puts "Invalid option"
+      answer = gets.chomp.downcase
+      break if ['y', 'n'].include? answer
+      puts "Invalid option!"
     end
     answer == 'y'
   end

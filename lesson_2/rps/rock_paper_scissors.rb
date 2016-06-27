@@ -1,5 +1,33 @@
 # frozen_string_literal: true
 require 'pry'
+
+class History
+  attr_accessor :logs
+
+  def initialize
+    # log is an array of arrays
+    # [[player_move, computer_move, :winner],[...]]
+    # with :winner being either :human, :computer, :tie
+    self.logs = []
+  end
+
+  def move_with_most_loses
+    # get all the logs where human lost
+    lost = logs.select do |log|
+      log[2] == :computer
+    end
+
+    # make new hash with amount of times lost with each move. {move => int}
+    lost_count = Hash.new(0)
+    lost.each do |move|
+      lost_count[move[0]] += 1
+    end
+
+    max = lost_count.max_by { |move, loses| loses }
+    max[0] if max
+  end
+end
+
 class Move
   VALUES = { 'r' => 'rock',
              'p' => 'paper',
@@ -13,11 +41,11 @@ class Move
                     'lizard'   => %w(paper spock),
                     'spock'    => %w(rock scissors) }.freeze
 
-  # LOOSING_MOVES = { 'rock'     => %w(paper spock),
-  #                   'paper'    => %w(scissors lizard),
-  #                   'scissors' => %w(rock spock),
-  #                   'lizard'   => %w(rock scissors),
-  #                   'spock'    => %w(paper lizard) }.freeze
+  LOOSING_MOVES = { 'rock'     => %w(paper spock),
+                    'paper'    => %w(scissors lizard),
+                    'scissors' => %w(rock spock),
+                    'lizard'   => %w(rock scissors),
+                    'spock'    => %w(paper lizard) }.freeze
 
   attr_accessor :value
 
@@ -35,12 +63,12 @@ class Move
 end
 
 class Player
-  attr_accessor :move, :name, :score, :history
+  attr_accessor :move, :name, :score, :player_history
 
   def initialize
     set_name
     self.score = 0
-    @history = []
+    @player_history = []
   end
 
   def to_s
@@ -64,7 +92,7 @@ class Human < Player
     end
 
     self.move = Move.new(choice)
-    @history << move
+    @player_history << move
   end
 
   private
@@ -98,15 +126,39 @@ class Human < Player
 end
 
 class Computer < Player
-  def choose
-    self.move = Move.new(Move::VALUES.values.sample)
-    @history << move
+  def choose(history)
+    # if :human didn't lose yet move_with_most_loses will return nil
+    if history.move_with_most_loses
+      last_round = history.logs.last
+      if last_round[2] == :computer
+        # lost last move
+        lost_move = last_round[0]
+        self.move = Move.new(filter_moves(lost_move).sample)
+      else
+        # didn't lose last move, check which move lost the most
+        lost_move = history.move_with_most_loses
+        self.move = Move.new(filter_moves(lost_move).sample)
+      end
+    else
+      # didn't lose yet
+      self.move = Move.new(Move::VALUES.values.sample)
+    end
+    @player_history << move
   end
 
   private
 
   def set_name
     self.name = ['R2D2', 'Hal', 'Chappie', 'Sonny', 'Number 5'].sample
+  end
+
+  def filter_moves(lost_move)
+    # the computer assumes that human won't use lost_move
+    # so we reject any move that can beat lost_move to increase the computer's
+    # probability of winning
+    Move::VALUES.values.reject do |move|
+      Move::LOOSING_MOVES[lost_move.value].include?(move)
+    end
   end
 end
 
@@ -141,35 +193,36 @@ module Display
   end
 
   def display_summary
-    # puts "#{human.name[0, 8].center(10)} | #{computer.name.center(10)}"
-    # puts "+".center(23, '-')
-    # human.history.size.times do |i|
-    #   puts "#{human.history[i].value.center(10)} | #{computer.history[i].value.center(10)}"
-    # end
-
-    combined_history = human.history.zip(computer.history)
-    combined_history.each do |x|
-
-      if x[0] > x[1]
-        x << :human
-      elsif x[1] > x[0]
-        x << :computer
-      else
-        x << :tie
-      end
+    puts "#{human.name[0, 8].center(10)} | #{computer.name.center(10)}"
+    puts "+".center(23, '-')
+    human.player_history.size.times do |i|
+      puts "#{human.player_history[i].value.center(10)} | #{computer.player_history[i].value.center(10)}"
     end
-    combined_history.each { |x| p x }
+
+    # combined_history = human.player_history.zip(computer.player_history)
+    # combined_history.each do |x|
+
+    #   if x[0] > x[1]
+    #     x << :human
+    #   elsif x[1] > x[0]
+    #     x << :computer
+    #   else
+    #     x << :tie
+    #   end
+    # end
+    # combined_history.each { |x| p x }
   end
 end
 
 class RPSGame
   include Display
 
-  attr_accessor :human, :computer, :points_to_win
+  attr_accessor :human, :computer, :points_to_win, :history
 
   def initialize
     @human = Human.new
     @computer = Computer.new
+    @history = History.new
   end
 
   def play
@@ -179,11 +232,12 @@ class RPSGame
       reset_score
       loop do
         human.choose
-        computer.choose
+        computer.choose(history)
         display_moves
         winner = detect_result
         update_score!(winner)
         display_round(winner)
+        update_history!(winner)
         break if game_over?
       end
       display_winner
@@ -217,11 +271,25 @@ class RPSGame
     winner.score += 1 if winner
   end
 
+  def update_history!(winner)
+    winner = case winner
+             when human
+               :human
+             when computer
+               :computer
+             else
+               :tie
+             end
+
+    log = [human.move, computer.move, winner]
+    history.logs << log
+  end
+
   def reset_score
     human.score = 0
-    human.history = []
+    human.player_history = []
     computer.score = 0
-    computer.history = []
+    computer.player_history = []
   end
 
   def game_over?
@@ -236,7 +304,7 @@ class RPSGame
       break if ['y', 'n'].include? answer.downcase
       puts "Invalid option"
     end
-    answer == 'y' ? true : false
+    answer == 'y'
   end
 end
 

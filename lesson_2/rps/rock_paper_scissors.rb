@@ -5,26 +5,30 @@ class History
   attr_accessor :logs
 
   def initialize
-    # log is an array of arrays
-    # [[player_move, computer_move, :winner],[...]]
-    # with :winner being either :human, :computer, :tie
     self.logs = []
   end
 
   def move_with_most_loses
-    # get all the logs where human lost
-    lost_rounds = logs.select do |log|
-      log[:winner] == :computer
-    end
-
-    # make new hash with amount of times lost with each move. {move => int}
-    lost_count = Hash.new(0)
-    lost_rounds.each do |move|
-      lost_count[move[:human_move]] += 1
-    end
-
-    max = lost_count.max_by { |_move, loses| loses }
+    lost = filter_rounds(:computer)
+    count_lost = count_rounds(lost)
+    max = count_lost.max_by { |_move, loses| loses }
     max[0] if max
+  end
+
+  private
+
+  def filter_rounds(winner)
+    logs.select do |log|
+      log[:winner] == winner
+    end
+  end
+
+  def count_rounds(rounds)
+    hsh = Hash.new(0)
+    rounds.each do |round|
+      hsh[round[:human_move]] += 1
+    end
+    hsh
   end
 end
 

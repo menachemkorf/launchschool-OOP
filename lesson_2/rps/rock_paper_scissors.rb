@@ -80,7 +80,7 @@ class Human < Player
   def choose
     choice = nil
     loop do
-      prompt_choice
+      prompt_move
       choice = gets.chomp.downcase
 
       if valid?(choice)
@@ -108,11 +108,13 @@ class Human < Player
     self.name = n
   end
 
-  def prompt_choice
+  def prompt_move
+    puts ""
     puts "Please choose one:"
     Move::VALUES.each do |initial, value|
       puts "#{initial}. #{value}"
     end
+    puts ""
   end
 
   def valid?(choice)
@@ -185,6 +187,7 @@ module Displayable
   end
 
   def display_winner
+    puts ""
     if human.score == points_to_win
       puts "#{human} won the game!"
     else

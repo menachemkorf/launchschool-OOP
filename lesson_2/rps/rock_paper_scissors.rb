@@ -13,14 +13,14 @@ class History
 
   def move_with_most_loses
     # get all the logs where human lost
-    lost = logs.select do |log|
-      log[2] == :computer
+    lost_rounds = logs.select do |log|
+      log[:winner] == :computer
     end
 
     # make new hash with amount of times lost with each move. {move => int}
     lost_count = Hash.new(0)
-    lost.each do |move|
-      lost_count[move[0]] += 1
+    lost_rounds.each do |move|
+      lost_count[move[:human_move]] += 1
     end
 
     max = lost_count.max_by { |_move, loses| loses }
@@ -133,8 +133,8 @@ class Computer < Player
     lost_move = nil
     if history.move_with_most_loses
       last_round = history.logs.last
-      lost_move = if last_round[2] == :computer
-                    last_round[0]
+      lost_move = if last_round[:winner] == :computer
+                    last_round[:human_move]
                   else
                     history.move_with_most_loses
                   end
@@ -284,7 +284,8 @@ class RPSGame
                :tie
              end
 
-    log = [human.move, computer.move, winner]
+    # log = [human.move, computer.move, winner]
+    log = {human_move: human.move, computer_move: computer.move, winner: winner}
     history.logs << log
   end
 

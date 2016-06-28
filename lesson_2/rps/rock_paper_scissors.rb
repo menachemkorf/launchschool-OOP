@@ -24,11 +24,11 @@ class History
   end
 
   def count_rounds(rounds)
-    hsh = Hash.new(0)
+    count = Hash.new(0)
     rounds.each do |round|
-      hsh[round[:human_move]] += 1
+      count[round[:human_move]] += 1
     end
-    hsh
+    count
   end
 end
 

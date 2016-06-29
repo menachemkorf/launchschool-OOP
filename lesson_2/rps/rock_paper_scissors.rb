@@ -18,27 +18,12 @@ class History
     end
   end
 
-  def move_with_most_loses
-    lost = filter_rounds(:computer)
-    count_lost = count_rounds(lost)
-    max = count_lost.max_by { |_move, loses| loses }
-    max[0] if max
-  end
-
-  def lost?
-    !filter_rounds(:computer).empty?
-  end
-
   def current_game_logs
     logs.last
   end
 
   def add(log)
     logs.last << log
-  end
-
-  def last_round
-    logs.flatten.last
   end
 
   def reset_round
@@ -59,6 +44,21 @@ class History
       count[round[:human_move]] += 1
     end
     count
+  end
+
+  def lost?
+    !filter_rounds(:computer).empty?
+  end
+
+  def last_round
+    logs.flatten.last
+  end
+
+  def move_with_most_loses
+    lost = filter_rounds(:computer)
+    count_lost = count_rounds(lost)
+    max = count_lost.max_by { |_move, loses| loses }
+    max[0] if max
   end
 end
 
@@ -91,6 +91,19 @@ class Move
     WINNING_MOVES[value].include?(other_move.value)
   end
 
+  def to_s
+    value
+  end
+
+  def self.prompt
+    puts ""
+    puts "Please choose one:"
+    VALUES.each do |initial, value|
+      puts "#{initial}. #{value}"
+    end
+    puts ""
+  end
+
   def self.valid?(choice)
     VALUES.flatten.include?(choice)
   end
@@ -99,10 +112,6 @@ class Move
     choice = VALUES[choice] if VALUES.keys.include?(choice)
     choice
   end
-
-  def to_s
-    value
-  end
 end
 
 class Player
@@ -110,7 +119,6 @@ class Player
 
   def initialize
     set_name
-    self.score = 0
   end
 
   def reset_round
@@ -142,7 +150,7 @@ class Human < Player
   def choose
     choice = nil
     loop do
-      prompt_move
+      Move.prompt
       choice = gets.chomp.downcase
 
       if Move.valid?(choice)
@@ -168,15 +176,6 @@ class Human < Player
     end
     self.name = n
   end
-
-  def prompt_move
-    puts ""
-    puts "Please choose one:"
-    Move::VALUES.each do |initial, value|
-      puts "#{initial}. #{value}"
-    end
-    puts ""
-  end
 end
 
 class Computer < Player
@@ -193,7 +192,7 @@ class Computer < Player
   def filter_moves(lost_move = nil)
     # the computer assumes that human won't use lost_move
     # so we reject any move that can beat lost_move to increase the computer's
-    # probability of winning
+    # chances of winning
     if lost_move
       Move::VALUES.values.reject do |move|
         Move::LOOSING_MOVES[lost_move.value].include?(move)
@@ -231,7 +230,7 @@ module Displayable
   end
 
   def display_winner
-    winner = [human, computer].find {|player| player.score = points_to_win}
+    winner = [human, computer].find { |player| player.score = points_to_win }
     puts ""
     winner.declare_win_game
   end

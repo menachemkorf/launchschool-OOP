@@ -6,7 +6,6 @@ class History
 
   def initialize
     self.logs = []
-    reset
   end
 
   def move_with_most_loses
@@ -32,7 +31,7 @@ class History
     logs.flatten.last
   end
 
-  def reset
+  def reset_round
     logs << []
   end
 
@@ -101,6 +100,10 @@ class Player
 
   def initialize
     set_name
+    self.score = 0
+  end
+
+  def reset_round
     self.score = 0
   end
 
@@ -254,7 +257,7 @@ class RPSGame
     display_welcome_message
     set_rounds
     loop do
-      reset_score
+      reset_game
       loop do
         human.choose
         computer.choose(history)
@@ -312,10 +315,10 @@ class RPSGame
     history.add(log)
   end
 
-  def reset_score
-    human.score = 0
-    computer.score = 0
-    history.reset
+  def reset_game
+    human.reset_round
+    computer.reset_round
+    history.reset_round
   end
 
   def game_over?

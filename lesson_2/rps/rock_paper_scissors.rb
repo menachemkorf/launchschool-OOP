@@ -82,6 +82,15 @@ class Move
     WINNING_MOVES[value].include?(other_move.value)
   end
 
+  def self.valid?(choice)
+    VALUES.flatten.include?(choice)
+  end
+
+  def self.format(choice)
+    choice = VALUES[choice] if VALUES.keys.include?(choice)
+    choice
+  end
+
   def to_s
     value
   end
@@ -107,8 +116,8 @@ class Human < Player
       prompt_move
       choice = gets.chomp.downcase
 
-      if valid?(choice)
-        choice = formatted(choice)
+      if Move.valid?(choice)
+        choice = Move.format(choice)
         break
       else
         puts "Invalid option!"
@@ -139,15 +148,6 @@ class Human < Player
     end
     puts ""
   end
-
-  def valid?(choice)
-    Move::VALUES.flatten.include?(choice)
-  end
-
-  def formatted(choice)
-    choice = Move::VALUES[choice] if Move::VALUES.keys.include?(choice)
-    choice
-  end
 end
 
 class Computer < Player
@@ -175,14 +175,13 @@ class Computer < Player
     # the computer assumes that human won't use lost_move
     # so we reject any move that can beat lost_move to increase the computer's
     # probability of winning
-    options = if lost_move
-                Move::VALUES.values.reject do |move|
-                  Move::LOOSING_MOVES[lost_move.value].include?(move)
-                end
-              else
-                Move::VALUES.values
-              end
-    options
+    if lost_move
+      Move::VALUES.values.reject do |move|
+        Move::LOOSING_MOVES[lost_move.value].include?(move)
+      end
+    else
+      Move::VALUES.values
+    end
   end
 end
 

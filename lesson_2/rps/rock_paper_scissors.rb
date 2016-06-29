@@ -107,6 +107,22 @@ class Player
     self.score = 0
   end
 
+  def declare_move
+    puts "#{name} chose #{move}"
+  end
+
+  def declare_score
+    puts "#{name} = #{score}"
+  end
+
+  def declare_win_round
+    puts "#{name} won!"
+  end
+
+  def declare_win_game
+    puts "#{name} won the game!"
+  end
+
   def to_s
     name
   end
@@ -155,7 +171,6 @@ end
 
 class Computer < Player
   def choose(history)
-    # if human didn't lose yet move_with_most_loses will return nil
     lost_move = nil
     if history.lost?
       last_round = history.last_round
@@ -200,26 +215,28 @@ module Displayable
   end
 
   def display_moves
-    puts "#{human} chose #{human.move}"
-    puts "#{computer} chose #{computer.move}"
+    human.declare_move
+    computer.declare_move
   end
 
   def display_round(winner)
-    puts winner ? "#{winner} won!" : "It's a tie!"
-    puts "#{human} = #{human.score}"
-    puts "#{computer} = #{computer.score}"
+    winner ? winner.declare_win_round : declare_tie
+    human.declare_score
+    computer.declare_score
+  end
+
+  def declare_tie
+    puts "It's a tie!"
   end
 
   def display_winner
+    winner = [human, computer].find {|player| player.score = points_to_win}
     puts ""
-    if human.score == points_to_win
-      puts "#{human} won the game!"
-    else
-      puts "#{computer} won the game!"
-    end
+    winner.declare_win_game
   end
 
   def display_summary
+    puts ""
     puts table_header
     puts "+".center(23, '-')
     summery = history.current_game_logs

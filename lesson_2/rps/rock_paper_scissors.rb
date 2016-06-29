@@ -8,6 +8,16 @@ class History
     self.logs = []
   end
 
+  def lost_move
+    if lost?
+      if last_round[:winner] == :computer
+        last_round[:human_move]
+      else
+        move_with_most_loses
+      end
+    end
+  end
+
   def move_with_most_loses
     lost = filter_rounds(:computer)
     count_lost = count_rounds(lost)
@@ -171,16 +181,7 @@ end
 
 class Computer < Player
   def choose(history)
-    lost_move = nil
-    if history.lost?
-      last_round = history.last_round
-      lost_move = if last_round[:winner] == :computer
-                    last_round[:human_move]
-                  else
-                    history.move_with_most_loses
-                  end
-    end
-    self.move = Move.new(filter_moves(lost_move).sample)
+    self.move = Move.new(filter_moves(history.lost_move).sample)
   end
 
   private

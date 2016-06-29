@@ -6,6 +6,7 @@ class History
 
   def initialize
     self.logs = []
+    reset
   end
 
   def move_with_most_loses
@@ -15,10 +16,30 @@ class History
     max[0] if max
   end
 
+  def lost?
+    !filter_rounds(:computer).empty?
+  end
+
+  def current_game_logs
+    logs.last
+  end
+
+  def add(log)
+    logs.last << log
+  end
+
+  def last_round
+    logs.flatten.last
+  end
+
+  def reset
+    logs << []
+  end
+
   private
 
   def filter_rounds(winner)
-    logs.select do |log|
+    logs.flatten.select do |log|
       log[:winner] == winner
     end
   end
@@ -67,12 +88,11 @@ class Move
 end
 
 class Player
-  attr_accessor :move, :name, :score, :player_history
+  attr_accessor :move, :name, :score
 
   def initialize
     set_name
     self.score = 0
-    @player_history = []
   end
 
   def to_s
@@ -96,7 +116,6 @@ class Human < Player
     end
 
     self.move = Move.new(choice)
-    @player_history << move
   end
 
   private
@@ -135,8 +154,8 @@ class Computer < Player
   def choose(history)
     # if human didn't lose yet move_with_most_loses will return nil
     lost_move = nil
-    if history.move_with_most_loses
-      last_round = history.logs.last
+    if history.lost?
+      last_round = history.last_round
       lost_move = if last_round[:winner] == :computer
                     last_round[:human_move]
                   else
@@ -144,7 +163,6 @@ class Computer < Player
                   end
     end
     self.move = Move.new(filter_moves(lost_move).sample)
-    @player_history << move
   end
 
   private
@@ -202,8 +220,9 @@ module Displayable
   def display_summary
     puts table_header
     puts "+".center(23, '-')
-    human.player_history.size.times do |n|
-      puts table_row(n)
+    summery = history.current_game_logs
+    summery.each do |log|
+      puts table_row(log)
     end
   end
 
@@ -211,9 +230,9 @@ module Displayable
     "#{format(human.name)} | #{format(computer.name)}"
   end
 
-  def table_row(n)
-    "#{format(human.player_history[n].value)} | "\
-    "#{format(computer.player_history[n].value)}"
+  def table_row(log)
+    "#{format(log[:human_move].value)} | "\
+    "#{format(log[:computer_move].value)}"
   end
 
   def format(output, length = 10, padding = " ")
@@ -288,16 +307,16 @@ class RPSGame
                :tie
              end
 
-    # log = [human.move, computer.move, winner]
-    log = {human_move: human.move, computer_move: computer.move, winner: winner}
-    history.logs << log
+    log = { human_move: human.move,
+            computer_move: computer.move,
+            winner: winner }
+    history.add(log)
   end
 
   def reset_score
     human.score = 0
-    human.player_history = []
     computer.score = 0
-    computer.player_history = []
+    history.reset
   end
 
   def game_over?

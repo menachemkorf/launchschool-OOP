@@ -22,7 +22,7 @@ class History
     logs.last
   end
 
-  def add(log)
+  def <<(log)
     logs.last << log
   end
 
@@ -109,13 +109,12 @@ class Move
   end
 
   def self.format(choice)
-    choice = VALUES[choice] if VALUES.keys.include?(choice)
-    choice
+    VALUES.keys.include?(choice) ? VALUES[choice] : choice
   end
 end
 
 class Player
-  attr_accessor :move, :name, :score
+  attr_accessor :move, :name, :score, :player_type
 
   def initialize
     set_name
@@ -147,6 +146,10 @@ class Player
 end
 
 class Human < Player
+  def initialize
+    super
+    @player_type = :human
+  end
   def choose
     choice = nil
     loop do
@@ -179,6 +182,11 @@ class Human < Player
 end
 
 class Computer < Player
+  def initialize
+    super
+    @player_type = :computer
+  end
+
   def choose(history)
     self.move = Move.new(filter_moves(history.lost_move).sample)
   end
@@ -316,20 +324,15 @@ class RPSGame
     winner.score += 1 if winner
   end
 
-  def update_history!(winner)
-    winner = case winner
-             when human
-               :human
-             when computer
-               :computer
-             else
-               :tie
-             end
+  def log_winner(winner)
+    winner ? winner.player_type : :tie
+  end
 
+  def update_history!(winner)
     log = { human_move: human.move,
             computer_move: computer.move,
-            winner: winner }
-    history.add(log)
+            winner: log_winner(winner) }
+    history << log
   end
 
   def reset_game

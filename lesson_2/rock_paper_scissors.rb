@@ -324,14 +324,14 @@ class RPSGame
     winner.score += 1 if winner
   end
 
-  def log_winner(winner)
+  def log_format(winner)
     winner ? winner.player_type : :tie
   end
 
   def update_history!(winner)
     log = { human_move: human.move,
             computer_move: computer.move,
-            winner: log_winner(winner) }
+            winner: log_format(winner) }
     history << log
   end
 

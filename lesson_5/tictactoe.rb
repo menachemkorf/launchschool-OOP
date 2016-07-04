@@ -1,5 +1,9 @@
 require 'pry'
 class Board
+  WINNING_LINES = [[1, 2, 3], [4, 5, 6], [7, 8, 9]] +
+                  [[1, 4, 7], [2, 5, 8], [3, 6, 9]] +
+                  [[1, 5, 9], [3, 5, 7]]
+
   def initialize
     @squares = {}
     (1..9).each { |key| @squares[key] = Square.new }
@@ -19,6 +23,30 @@ class Board
 
   def full?
     unmarked_keys.empty?
+  end
+
+  def someone_won?
+    !!detect_winner
+  end
+
+  def count_human_marker(squares)
+    squares.collect(&:marker).count(TTTGame::HUMAN_MARKER)
+  end
+
+  def count_computer_marker(squares)
+    squares.collect(&:marker).count(TTTGame::COMPUTER_MARKER)
+  end
+
+  # return winning_marker or nil
+  def detect_winner
+    WINNING_LINES.each do |line|
+      if count_human_marker(@squares.values_at(*line)) == 3
+        return TTTGame::HUMAN_MARKER
+      elsif count_computer_marker(@squares.select{|k,_| line.include?(k)}.values) == 3
+        return TTTGame::COMPUTER_MARKER
+      end
+    end
+    nil
   end
 end
 
@@ -104,7 +132,14 @@ class TTTGame
 
   def display_result
     display_board
-    puts "The board is full."
+    case board.detect_winner
+    when human.marker
+      puts "You won!"
+    when computer.marker
+      puts "Computer won!"
+    else
+      puts "It's a tie!"
+    end
   end
 
   def play
@@ -113,13 +148,10 @@ class TTTGame
     loop do
       display_board
       human_moves
-      # break if someone_won? || board_full?
-      break if board.full?
+      break if board.full? || board.someone_won?
 
       computer_moves
-
-      # break if someone_won? || board_full?
-      break if board.full?
+      break if board.full? || board.someone_won?
     end
     display_result
     display_goodbye_message

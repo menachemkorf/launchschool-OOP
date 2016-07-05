@@ -6,7 +6,7 @@ class Board
 
   def initialize
     @squares = {}
-    (1..9).each { |key| @squares[key] = Square.new }
+    reset
   end
 
   def get_square_at(key)
@@ -47,6 +47,10 @@ class Board
       end
     end
     nil
+  end
+
+  def reset
+    (1..9).each { |key| @squares[key] = Square.new }
   end
 end
 
@@ -89,6 +93,7 @@ class TTTGame
   end
 
   def display_welcome_message
+    system('clear') || system('cls')
     puts "Welcome to Tic Tac Toe!"
     puts ""
   end
@@ -97,9 +102,9 @@ class TTTGame
     puts "Thank you for playing Tic Tac Toe. Good bye!"
   end
 
-  def display_board
-    system('clear') || system('cls')
-    puts "Tou're #{human.marker}. Computer is #{computer.marker}."
+  def display_board(clear = true)
+    system('clear') || system('cls') if clear
+    puts "You're #{human.marker}. Computer is #{computer.marker}."
     puts ""
     puts "     |     |"
     puts "  #{board.get_square_at(1)}  |  #{board.get_square_at(2)}  |  #{board.get_square_at(3)}"
@@ -142,18 +147,38 @@ class TTTGame
     end
   end
 
+  def play_again?
+    answer = nil
+    loop do
+      puts "Would you like to play again? (y/n)"
+      answer = gets.chomp.downcase
+      break if ['y', 'n'].include? answer
+      puts "Invalid option!"
+    end
+    answer == 'y'
+  end
+
   def play
     display_welcome_message
-
     loop do
-      display_board
-      human_moves
-      break if board.full? || board.someone_won?
+      display_board(false)
+      loop do
 
-      computer_moves
-      break if board.full? || board.someone_won?
+        human_moves
+        break if board.full? || board.someone_won?
+
+        computer_moves
+        break if board.full? || board.someone_won?
+
+        display_board
+      end
+      display_result
+      break unless play_again?
+      board.reset
+      system('clear') || system('cls')
+      puts "Let's play again."
+      puts ""
     end
-    display_result
     display_goodbye_message
   end
 end

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'pry'
 class Board
   WINNING_LINES = [[1, 2, 3], [4, 5, 6], [7, 8, 9]] +
@@ -9,6 +10,7 @@ class Board
     reset
   end
 
+  # rubocop:disable Metrics/AbcSize
   def draw
     puts "     |     |"
     puts "  #{@squares[1]}  |  #{@squares[2]}  |  #{@squares[3]}"
@@ -23,6 +25,7 @@ class Board
     puts "     |     |"
     puts ""
   end
+  # rubocop:enable Metrics/AbcSize
 
   def []=(num, marker)
     @squares[num].marker = marker

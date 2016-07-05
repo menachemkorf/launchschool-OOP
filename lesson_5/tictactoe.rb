@@ -43,14 +43,6 @@ class Board
     !!winning_marker
   end
 
-  def count_human_marker(squares)
-    squares.collect(&:marker).count(TTTGame::HUMAN_MARKER)
-  end
-
-  def count_computer_marker(squares)
-    squares.collect(&:marker).count(TTTGame::COMPUTER_MARKER)
-  end
-
   def winning_marker
     WINNING_LINES.each do |line|
       squares = @squares.values_at(*line)
@@ -64,6 +56,8 @@ class Board
   def reset
     (1..9).each { |key| @squares[key] = Square.new }
   end
+
+  private
 
   def three_identical_markers?(squares)
     markers = squares.select(&:marked?).collect(&:marker)
@@ -95,10 +89,16 @@ class Square
 end
 
 class Player
+  attr_accessor :score
   attr_reader :marker
 
   def initialize(marker)
     @marker = marker
+    @score = 0
+  end
+
+  def reset
+    @score = 0
   end
 end
 
@@ -114,6 +114,7 @@ class TTTGame
     @human = Player.new(HUMAN_MARKER)
     @computer = Player.new(COMPUTER_MARKER)
     @current_marker = FIRST_TO_MOVE
+    @winning_marker = nil
   end
 
   def play
@@ -125,6 +126,8 @@ class TTTGame
         break if board.full? || board.someone_won?
         clear_screen_and_display_board if human_turn?
       end
+      @winning_marker = board.winning_marker
+      update_score
       display_result
       break unless play_again?
       reset
@@ -147,13 +150,14 @@ class TTTGame
 
   def display_board
     puts "You're #{human.marker}. Computer is #{computer.marker}."
+    puts "You won #{human.score} rounds. Computer won #{computer.score} rounds."
     puts ""
     board.draw
     puts ""
   end
 
   def human_moves
-    puts "Choose a square (#{board.unmarked_keys.join(', ')}):"
+    puts "Choose a square (#{joinor(board.unmarked_keys)}):"
     square = nil
     loop do
       square = gets.chomp.to_i
@@ -169,13 +173,22 @@ class TTTGame
 
   def display_result
     clear_screen_and_display_board
-    case board.winning_marker
+    case @winning_marker
     when human.marker
       puts "You won!"
     when computer.marker
       puts "Computer won!"
     else
       puts "It's a tie!"
+    end
+  end
+
+  def update_score
+    case @winning_marker
+    when human.marker
+      human.score += 1
+    when computer.marker
+      computer.score += 1
     end
   end
 
@@ -222,6 +235,11 @@ class TTTGame
       computer_moves
       @current_marker = HUMAN_MARKER
     end
+  end
+
+  def joinor(arr, delimiter=', ', word='or')
+    arr[-1] = "#{word} #{arr.last}" if arr.size > 1
+    arr.size == 2 ? arr.join(' ') : arr.join(delimiter)
   end
 end
 

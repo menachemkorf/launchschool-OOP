@@ -114,10 +114,14 @@ class Move
 end
 
 class Player
-  attr_accessor :move, :name, :score, :player_type
+  attr_accessor :move, :name, :score
 
   def initialize
     set_name
+  end
+
+  def won_round
+    self.score += 1
   end
 
   def reset_round
@@ -146,10 +150,6 @@ class Player
 end
 
 class Human < Player
-  def initialize
-    super
-    @player_type = :human
-  end
   def choose
     choice = nil
     loop do
@@ -182,11 +182,6 @@ class Human < Player
 end
 
 class Computer < Player
-  def initialize
-    super
-    @player_type = :computer
-  end
-
   def choose(history)
     self.move = Move.new(filter_moves(history.lost_move).sample)
   end
@@ -227,10 +222,26 @@ module Displayable
     computer.declare_move
   end
 
-  def display_round(winner)
-    winner ? winner.declare_win_round : declare_tie
+  def display_round_winner
+    case @result
+    when :human
+      human.declare_win_round
+    when :computer
+      computer.declare_win_round
+    else
+      declare_tie
+    end
+  end
+
+  def display_score
     human.declare_score
     computer.declare_score
+  end
+
+  def display_round
+    display_moves
+    display_round_winner
+    display_score
   end
 
   def declare_tie
@@ -276,6 +287,7 @@ class RPSGame
     @human = Human.new
     @computer = Computer.new
     @history = History.new
+    @result = nil
   end
 
   def play
@@ -286,11 +298,12 @@ class RPSGame
       loop do
         human.choose
         computer.choose(history)
-        display_moves
-        winner = detect_result
-        update_score!(winner)
-        display_round(winner)
-        update_history!(winner)
+
+        detect_result
+        update_score
+        update_history
+
+        display_round
         break if game_over?
       end
       display_winner
@@ -313,25 +326,28 @@ class RPSGame
   end
 
   def detect_result
-    if human.move > computer.move
-      human
-    elsif computer.move > human.move
-      computer
+    @result = if human.move > computer.move
+                :human
+              elsif computer.move > human.move
+                :computer
+              else
+                :tie
+              end
+  end
+
+  def update_score
+    case @result
+    when :human
+      human.won_round
+    when :computer
+      computer.won_round
     end
   end
 
-  def update_score!(winner)
-    winner.score += 1 if winner
-  end
-
-  def log_format(winner)
-    winner ? winner.player_type : :tie
-  end
-
-  def update_history!(winner)
+  def update_history
     log = { human_move: human.move,
             computer_move: computer.move,
-            winner: log_format(winner) }
+            winner: @result }
     history << log
   end
 

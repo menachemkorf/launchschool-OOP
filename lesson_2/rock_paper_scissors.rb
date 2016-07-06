@@ -1,6 +1,4 @@
 # frozen_string_literal: true
-require 'pry'
-
 class History
   attr_accessor :logs
 

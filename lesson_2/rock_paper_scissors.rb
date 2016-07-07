@@ -246,10 +246,9 @@ module Displayable
     puts "It's a tie!"
   end
 
-  def display_winner
-    winner = [human, computer].find { |player| player.score = points_to_win }
+  def display_game_winner
     puts ""
-    winner.declare_win_game
+    game_winner.declare_win_game
   end
 
   def display_summary
@@ -304,7 +303,7 @@ class RPSGame
         display_round
         break if game_over?
       end
-      display_winner
+      display_game_winner
       display_summary
       break unless play_again?
     end
@@ -353,6 +352,10 @@ class RPSGame
     human.reset_round
     computer.reset_round
     history.reset_round
+  end
+
+  def game_winner
+    [human, computer].find { |player| player.score == points_to_win }
   end
 
   def game_over?

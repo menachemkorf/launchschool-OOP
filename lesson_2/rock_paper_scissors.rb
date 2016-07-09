@@ -221,7 +221,7 @@ module Displayable
   end
 
   def display_round_winner
-    case @result
+    case result
     when :human
       human.declare_win_round
     when :computer
@@ -278,7 +278,7 @@ end
 class RPSGame
   include Displayable
 
-  attr_accessor :human, :computer, :points_to_win, :history
+  attr_accessor :human, :computer, :points_to_win, :history, :result
 
   def initialize
     @human = Human.new
@@ -323,7 +323,7 @@ class RPSGame
   end
 
   def detect_result
-    @result = if human.move > computer.move
+    self.result = if human.move > computer.move
                 :human
               elsif computer.move > human.move
                 :computer
@@ -333,7 +333,7 @@ class RPSGame
   end
 
   def update_score
-    case @result
+    case result
     when :human
       human.won_round
     when :computer
@@ -344,7 +344,7 @@ class RPSGame
   def update_history
     log = { human_move: human.move,
             computer_move: computer.move,
-            winner: @result }
+            winner: result }
     history << log
   end
 

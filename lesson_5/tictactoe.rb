@@ -144,6 +144,11 @@ class TTTgame
     puts ""
   end
 
+  def display_play_again_message
+    puts "Let's play again!"
+    puts ""
+  end
+
   def display_goodbye_message
     puts "Thank you for playing Tic Tac Toe! Good bye!"
   end
@@ -207,8 +212,7 @@ class TTTgame
     board.reset
     @current_marker = FIRST_TO_MOVE
     clear
-    puts "Let's play again!"
-    puts ""
+    display_play_again_message
   end
 
   def current_player_moves

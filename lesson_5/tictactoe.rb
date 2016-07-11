@@ -97,10 +97,19 @@ class Square
 end
 
 class Player
-  attr_reader :marker
+  attr_accessor :marker, :score
 
   def initialize(marker)
     @marker = marker
+    reset
+  end
+
+  def won_round
+    self.score += 1
+  end
+
+  def reset
+    self.score = 0
   end
 end
 
@@ -109,7 +118,7 @@ class TTTgame
   COMPUTER_MARKER = "O"
   FIRST_TO_MOVE = HUMAN_MARKER
 
-  attr_reader :board, :human, :computer
+  attr_accessor :board, :human, :computer, :result, :points_to_win
 
   def initialize
     @board = Board.new
@@ -119,20 +128,26 @@ class TTTgame
   end
 
   def play
-    clear
     display_welcome_message
+    set_rounds
 
     loop do
-      display_board
       loop do
-        current_player_moves
-        break if board.someone_won? || board.full?
-        clear_screen_and_display_board if human_turn?
+        display_board
+        loop do
+          current_player_moves
+          break if board.someone_won? || board.full?
+          clear_screen_and_display_board if human_turn?
+        end
+        detect_result
+        update_score
+        display_result
+        break if game_over?
+        reset_round
       end
-
-      display_result
+      display_game_winner
       break unless play_again?
-      reset
+      reset_game
     end
     display_goodbye_message
   end
@@ -140,6 +155,7 @@ class TTTgame
   private
 
   def display_welcome_message
+    clear
     puts "Welcome to Tic Tac Toe!"
     puts ""
   end
@@ -155,13 +171,32 @@ class TTTgame
 
   def display_board
     puts "You're a #{human.marker}. Computer is a #{computer.marker}."
+    display_score
     puts ""
     board.draw
     puts ""
   end
 
+  def display_score
+    puts "You have #{human.score} points. Computer has #{computer.score} points."
+  end
+
+  def display_game_winner
+
+  end
+
+  def set_rounds
+    loop do
+      puts "How many points do you want to play for?"
+      self.points_to_win = gets.chomp.to_i
+      break if points_to_win > 0
+      puts "Invalid option!"
+    end
+    puts "Ok, so whoever gets #{points_to_win} points first wins."
+  end
+
   def human_moves
-    puts "Choose a number between #{board.unmarked_keys.join(', ')}:"
+    puts "Choose an empty square. (#{board.unmarked_keys.join(', ')}):"
     square = nil
     loop do
       square = gets.chomp.to_i
@@ -176,16 +211,42 @@ class TTTgame
     board[square] = computer.marker
   end
 
-  def display_result
-    clear_screen_and_display_board
+  def detect_result
     case board.winning_marker
     when human.marker
-      puts "You won!"
+      self.result = :human
     when computer.marker
+      self.result = :computer
+    else
+      self.result = :tie
+    end
+  end
+
+  def update_score
+    case result
+    when :human
+      human.won_round
+    when :computer
+      computer.won_round
+    end
+  end
+
+  def display_result
+    clear_screen_and_display_board
+    case result
+    when :human
+      puts "You won!"
+    when :computer
       puts "Computer won!"
     else
       puts "It's a tie!"
     end
+    pause
+  end
+
+  def pause
+    puts "Press enter to continue."
+    gets
   end
 
   def play_again?
@@ -208,11 +269,24 @@ class TTTgame
     display_board
   end
 
-  def reset
+  def reset_round
     board.reset
     @current_marker = FIRST_TO_MOVE
     clear
+  end
+
+  def reset_game
+    # board.reset
+    # @current_marker = FIRST_TO_MOVE
+    # clear
+    reset_round
+    reset_points
     display_play_again_message
+  end
+
+  def reset_points
+    human.reset
+    computer.reset
   end
 
   def current_player_moves
@@ -227,6 +301,10 @@ class TTTgame
 
   def human_turn?
     @current_marker == HUMAN_MARKER
+  end
+
+  def game_over?
+    human.score == points_to_win || computer.score == points_to_win
   end
 end
 TTTgame.new.play

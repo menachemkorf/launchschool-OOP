@@ -43,28 +43,10 @@ class Board
     !!winning_marker
   end
 
-  def count_computer_markers(squares)
-    squares.count(&:marked_computer?)
-  end
-
-  def count_human_markers(squares)
-    squares.count(&:marked_human?)
-  end
-
-  def count_unmarked(squares)
-    squares.count(&:unmarked?)
-  end
-
-  def unmarked_square(line)
-    @squares.select do |key, square|
-      line.include?(key) && square.unmarked?
-    end.keys.first
-  end
-
   def computer_offense_square
     WINNING_LINES.each do |line|
       squares = @squares.values_at(*line)
-      if count_computer_markers(squares) == 2 &&
+      if count_computer_marked(squares) == 2 &&
          count_unmarked(squares) == 1
         return unmarked_square(line)
       end
@@ -75,7 +57,7 @@ class Board
   def computer_defense_square
     WINNING_LINES.each do |line|
       squares = @squares.values_at(*line)
-      if count_human_markers(squares) == 2 &&
+      if count_human_marked(squares) == 2 &&
          count_unmarked(squares) == 1
         return unmarked_square(line)
       end
@@ -103,6 +85,24 @@ class Board
     markers = squares.select(&:marked?).collect(&:marker)
     return false if markers.size != 3
     markers.max == markers.min
+  end
+
+  def count_computer_marked(squares)
+    squares.count(&:marked_computer?)
+  end
+
+  def count_human_marked(squares)
+    squares.count(&:marked_human?)
+  end
+
+  def count_unmarked(squares)
+    squares.count(&:unmarked?)
+  end
+
+  def unmarked_square(line)
+    @squares.select do |key, square|
+      line.include?(key) && square.unmarked?
+    end.keys.first
   end
 end
 
@@ -392,4 +392,5 @@ class TTTgame
     human.score == points_to_win || computer.score == points_to_win
   end
 end
+
 TTTgame.new.play

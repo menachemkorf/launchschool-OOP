@@ -43,12 +43,36 @@ class Board
     !!winning_marker
   end
 
-  def count_human_markers(squares)
-    squares.collect(&:marker).count(TTTgame::HUMAN_MARKER)
+  # def count_human_markers(squares)
+  #   squares.collect(&:marker).count(TTTgame::HUMAN_MARKER)
+  # end
+
+  # def count_computer_markers(squares)
+  #   squares.collect(&:marker).count(TTTgame::COMPUTER_MARKER)
+  # end
+
+  # def count_markers_in_line(line, marker)
+  #   @squares.values_at(*line).select {|i| i.marker == marker }.count
+  # end
+
+  def computer_offense_square
+    WINNING_LINES.each do |line|
+      if @squares.values_at(*line).count { |sqr| sqr.marked_computer? } == 2 &&
+         @squares.values_at(*line).count { |sqr| sqr.unmarked? } == 1
+        return @squares.select {|k, v| line.include?(k) && v.unmarked?}.keys.first
+      end
+    end
+    nil
   end
 
-  def count_computer_markers(squares)
-    squares.collect(&:marker).count(TTTgame::COMPUTER_MARKER)
+  def computer_defense_square
+    WINNING_LINES.each do |line|
+      if @squares.values_at(*line).count { |sqr| sqr.marked_human? } == 2 &&
+         @squares.values_at(*line).count { |sqr| sqr.unmarked? } == 1
+        return @squares.select {|k, v| line.include?(k) && v.unmarked?}.keys.first
+      end
+    end
+    nil
   end
 
   def winning_marker
@@ -93,6 +117,14 @@ class Square
 
   def marked?
     marker != INITIAL_MARKER
+  end
+
+  def marked_human?
+    marker == TTTgame::HUMAN_MARKER
+  end
+
+  def marked_computer?
+    marker == TTTgame::COMPUTER_MARKER
   end
 end
 
@@ -244,7 +276,15 @@ class TTTgame
   end
 
   def computer_moves
-    square = board.unmarked_keys.sample
+
+    square =  board.computer_offense_square ||
+              board.computer_defense_square ||
+              board.unmarked_keys.find { |sqr| sqr == 5 } ||
+              board.unmarked_keys.sample
+
+
+
+    # square = board.unmarked_keys.sample
     board[square] = computer.marker
   end
 

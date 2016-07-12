@@ -44,19 +44,21 @@ class Board
   end
 
   def count_computer_markers(squares)
-    squares.count { |square| square.marked_computer? }
+    squares.count(&:marked_computer?)
   end
 
   def count_human_markers(squares)
-    squares.count { |square| square.marked_human? }
+    squares.count(&:marked_human?)
   end
 
   def count_unmarked(squares)
-    squares.count { |square| square.unmarked? }
+    squares.count(&:unmarked?)
   end
 
   def unmarked_square(line)
-    @squares.select {|k, v| line.include?(k) && v.unmarked?}.keys.first
+    @squares.select do |key, square|
+      line.include?(key) && square.unmarked?
+    end.keys.first
   end
 
   def computer_offense_square
@@ -160,7 +162,7 @@ class Player
   end
 
   def to_s
-    self.name
+    name
   end
 end
 
@@ -199,9 +201,7 @@ class TTTgame
   end
 
   def play
-
     set_rounds
-
     loop do
       loop do
         display_board
@@ -252,7 +252,8 @@ class TTTgame
   end
 
   def display_score
-    puts "#{human} has #{human.score} points. #{computer} has #{computer.score} points."
+    puts "#{human} has #{human.score} points."\
+         "#{computer} has #{computer.score} points."
   end
 
   def display_game_winner
@@ -282,27 +283,23 @@ class TTTgame
   end
 
   def computer_moves
-
     square =  board.computer_offense_square ||
               board.computer_defense_square ||
               board.unmarked_keys.find { |sqr| sqr == 5 } ||
               board.unmarked_keys.sample
 
-
-
-    # square = board.unmarked_keys.sample
     board[square] = computer.marker
   end
 
   def detect_result
-    case board.winning_marker
-    when human.marker
-      self.result = :human
-    when computer.marker
-      self.result = :computer
-    else
-      self.result = :tie
-    end
+    self.result = case board.winning_marker
+                  when human.marker
+                    :human
+                  when computer.marker
+                    :computer
+                  else
+                    :tie
+                  end
   end
 
   def update_score

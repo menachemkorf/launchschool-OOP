@@ -167,6 +167,8 @@ class Player
 end
 
 class Human < Player
+  private
+
   def set_name
     n = nil
     loop do
@@ -180,12 +182,27 @@ class Human < Player
 end
 
 class Computer < Player
+  private
+
   def set_name
     self.name = ['R2D2', 'Hal', 'Chappie', 'Sonny', 'Number 5'].sample
   end
 end
 
+module Screen_Helper
+  def clear
+    system('clear') || system('cls')
+  end
+
+  def pause
+    puts "Press enter to continue."
+    gets
+  end
+end
+
 class TTTgame
+  include Screen_Helper
+
   HUMAN_MARKER = "X"
   COMPUTER_MARKER = "O"
   FIRST_TO_MOVE = HUMAN_MARKER
@@ -328,11 +345,6 @@ class TTTgame
     puts "It's a tie!"
   end
 
-  def pause
-    puts "Press enter to continue."
-    gets
-  end
-
   def play_again?
     answer = nil
     loop do
@@ -342,10 +354,6 @@ class TTTgame
       puts "Invalid option!"
     end
     answer == 'y'
-  end
-
-  def clear
-    system('clear') || system('cls')
   end
 
   def clear_screen_and_display_board

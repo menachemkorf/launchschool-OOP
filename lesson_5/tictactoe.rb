@@ -408,7 +408,7 @@ class TTTgame
   end
 
   def game_over?
-    human.score == points_to_win || computer.score == points_to_win
+    !!game_winner
   end
 end
 

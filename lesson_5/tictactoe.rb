@@ -6,33 +6,35 @@ class Board
                   [[1, 4, 7], [2, 5, 8], [3, 6, 9]] +
                   [[1, 5, 9], [3, 5, 7]]
 
+  attr_reader :squares
+
   def initialize
     @squares = {}
     reset
   end
 
   def []=(key, marker)
-    @squares[key].marker = marker
+    squares[key].marker = marker
   end
 
   # rubocop:disable Metrics/AbcSize
   def draw
     puts "     |     |"
-    puts "  #{@squares[1]}  |  #{@squares[2]}  |  #{@squares[3]}"
+    puts "  #{squares[1]}  |  #{squares[2]}  |  #{squares[3]}"
     puts "     |     |"
     puts "-----+-----+-----"
     puts "     |     |"
-    puts "  #{@squares[4]}  |  #{@squares[5]}  |  #{@squares[6]}"
+    puts "  #{squares[4]}  |  #{squares[5]}  |  #{squares[6]}"
     puts "     |     |"
     puts "-----+-----+-----"
     puts "     |     |"
-    puts "  #{@squares[7]}  |  #{@squares[8]}  |  #{@squares[9]}"
+    puts "  #{squares[7]}  |  #{squares[8]}  |  #{squares[9]}"
     puts "     |     |"
   end
   # rubocop:enable Metrics/AbcSize
 
   def unmarked_keys
-    @squares.keys.select { |key| @squares[key].unmarked? }
+    squares.keys.select { |key| squares[key].unmarked? }
   end
 
   def full?
@@ -45,9 +47,9 @@ class Board
 
   def computer_offense_square
     WINNING_LINES.each do |line|
-      squares = @squares.values_at(*line)
-      if count_computer_marked(squares) == 2 &&
-         count_unmarked(squares) == 1
+      sqrs = squares.values_at(*line)
+      if count_computer_marked(sqrs) == 2 &&
+         count_unmarked(sqrs) == 1
         return unmarked_square(line)
       end
     end
@@ -56,9 +58,9 @@ class Board
 
   def computer_defense_square
     WINNING_LINES.each do |line|
-      squares = @squares.values_at(*line)
-      if count_human_marked(squares) == 2 &&
-         count_unmarked(squares) == 1
+      sqrs = squares.values_at(*line)
+      if count_human_marked(sqrs) == 2 &&
+         count_unmarked(sqrs) == 1
         return unmarked_square(line)
       end
     end
@@ -67,16 +69,16 @@ class Board
 
   def winning_marker
     WINNING_LINES.each do |line|
-      squares = @squares.values_at(*line)
-      if three_identical_markers?(squares)
-        return squares.first.marker
+      sqrs = squares.values_at(*line)
+      if three_identical_markers?(sqrs)
+        return sqrs.first.marker
       end
     end
     nil
   end
 
   def reset
-    (1..9).each { |key| @squares[key] = Square.new }
+    (1..9).each { |key| squares[key] = Square.new }
   end
 
   private
@@ -100,7 +102,7 @@ class Board
   end
 
   def unmarked_square(line)
-    @squares.select do |key, square|
+    squares.select do |key, square|
       line.include?(key) && square.unmarked?
     end.keys.first
   end
@@ -137,7 +139,8 @@ class Square
 end
 
 class Player
-  attr_accessor :marker, :score, :name
+  attr_reader :score
+  attr_accessor :marker, :name
 
   def initialize(marker)
     @marker = marker
@@ -164,6 +167,10 @@ class Player
   def to_s
     name
   end
+
+  private
+
+  attr_writer :score
 end
 
 class Human < Player
@@ -189,7 +196,7 @@ class Computer < Player
   end
 end
 
-module Screen_Helper
+module ScreenHelper
   def clear
     system('clear') || system('cls')
   end
@@ -201,13 +208,11 @@ module Screen_Helper
 end
 
 class TTTgame
-  include Screen_Helper
+  include ScreenHelper
 
   HUMAN_MARKER = "X"
   COMPUTER_MARKER = "O"
   FIRST_TO_MOVE = HUMAN_MARKER
-
-  attr_accessor :board, :human, :computer, :result, :points_to_win
 
   def initialize
     display_welcome_message
@@ -242,6 +247,9 @@ class TTTgame
 
   private
 
+  attr_reader :human, :computer
+  attr_accessor :board, :result, :points_to_win, :current_marker
+
   def display_welcome_message
     clear
     puts "Welcome to Tic Tac Toe!"
@@ -269,7 +277,7 @@ class TTTgame
   end
 
   def display_score
-    puts "#{human} has #{human.score} points."\
+    puts "#{human} has #{human.score} points. "\
          "#{computer} has #{computer.score} points."
   end
 
@@ -363,7 +371,7 @@ class TTTgame
 
   def reset_round
     board.reset
-    @current_marker = FIRST_TO_MOVE
+    self.current_marker = FIRST_TO_MOVE
     clear
   end
 
@@ -381,15 +389,15 @@ class TTTgame
   def current_player_moves
     if human_turn?
       human_moves
-      @current_marker = COMPUTER_MARKER
+      self.current_marker = COMPUTER_MARKER
     else
       computer_moves
-      @current_marker = HUMAN_MARKER
+      self.current_marker = HUMAN_MARKER
     end
   end
 
   def human_turn?
-    @current_marker == HUMAN_MARKER
+    current_marker == HUMAN_MARKER
   end
 
   def game_winner

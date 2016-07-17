@@ -137,8 +137,8 @@ class Square
 end
 
 class Player
-  attr_reader :score
-  attr_accessor :marker, :name
+  attr_reader :score, :marker
+  attr_accessor :name
 
   def initialize(marker)
     @marker = marker

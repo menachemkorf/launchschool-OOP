@@ -222,6 +222,7 @@ class TTTgame
     @current_marker = FIRST_TO_MOVE
   end
 
+  # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
   def play
     set_rounds
     loop do
@@ -244,6 +245,7 @@ class TTTgame
     end
     display_goodbye_message
   end
+  # rubocop:enable Metrics/AbcSize Metrics/MethodLength
 
   private
 

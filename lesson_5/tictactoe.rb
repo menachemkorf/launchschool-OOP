@@ -207,8 +207,68 @@ module ScreenHelper
   end
 end
 
+module Displayable
+  def display_welcome_message
+    clear
+    puts "Welcome to Tic Tac Toe!"
+  end
+
+  def display_play_again_message
+    puts "Let's play again!"
+    puts ""
+  end
+
+  def display_goodbye_message
+    puts "Thank you for playing Tic Tac Toe! Good bye!"
+  end
+
+  def display_board
+    display_markers
+    display_score
+    puts ""
+    board.draw
+    puts ""
+  end
+
+  def display_markers
+    puts "#{human} is #{human.marker}. #{computer} is #{computer.marker}."
+  end
+
+  def display_score
+    puts "#{human} has #{human.score} points. "\
+         "#{computer} has #{computer.score} points."
+  end
+
+  def display_game_winner
+    game_winner.declare_win_game
+  end
+
+  def display_result
+    clear_screen_and_display_board
+    case result
+    when :human
+      human.declare_win_round
+    when :computer
+      computer.declare_win_round
+    else
+      declare_tie
+    end
+    pause
+  end
+
+  def declare_tie
+    puts "It's a tie!"
+  end
+
+  def clear_screen_and_display_board
+    clear
+    display_board
+  end
+end
+
 class TTTgame
   include ScreenHelper
+  include Displayable
 
   HUMAN_MARKER = "X"
   COMPUTER_MARKER = "O"
@@ -251,41 +311,6 @@ class TTTgame
 
   attr_reader :human, :computer
   attr_accessor :board, :result, :points_to_win, :current_marker
-
-  def display_welcome_message
-    clear
-    puts "Welcome to Tic Tac Toe!"
-  end
-
-  def display_play_again_message
-    puts "Let's play again!"
-    puts ""
-  end
-
-  def display_goodbye_message
-    puts "Thank you for playing Tic Tac Toe! Good bye!"
-  end
-
-  def display_board
-    display_markers
-    display_score
-    puts ""
-    board.draw
-    puts ""
-  end
-
-  def display_markers
-    puts "#{human} is #{human.marker}. #{computer} is #{computer.marker}."
-  end
-
-  def display_score
-    puts "#{human} has #{human.score} points. "\
-         "#{computer} has #{computer.score} points."
-  end
-
-  def display_game_winner
-    game_winner.declare_win_game
-  end
 
   def set_rounds
     loop do
@@ -338,23 +363,6 @@ class TTTgame
     end
   end
 
-  def display_result
-    clear_screen_and_display_board
-    case result
-    when :human
-      human.declare_win_round
-    when :computer
-      computer.declare_win_round
-    else
-      declare_tie
-    end
-    pause
-  end
-
-  def declare_tie
-    puts "It's a tie!"
-  end
-
   def play_again?
     answer = nil
     loop do
@@ -364,11 +372,6 @@ class TTTgame
       puts "Invalid option!"
     end
     answer == 'y'
-  end
-
-  def clear_screen_and_display_board
-    clear
-    display_board
   end
 
   def reset_round

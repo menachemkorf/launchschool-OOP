@@ -43,7 +43,7 @@ class Board
     !!winning_marker
   end
 
-  def computer_offense_square
+  def pick_square_offensively
     WINNING_LINES.each do |line|
       sqrs = squares.values_at(*line)
       if count_computer_marked(sqrs) == 2 &&
@@ -54,7 +54,7 @@ class Board
     nil
   end
 
-  def computer_defense_square
+  def pick_square_defensively
     WINNING_LINES.each do |line|
       sqrs = squares.values_at(*line)
       if count_human_marked(sqrs) == 2 &&
@@ -63,6 +63,14 @@ class Board
       end
     end
     nil
+  end
+
+  def pick_center_square
+    unmarked_keys.find { |sqr| sqr == 5 }
+  end
+
+  def pick_random_square
+    unmarked_keys.sample
   end
 
   def winning_marker
@@ -333,10 +341,10 @@ class TTTgame
   end
 
   def computer_moves
-    square =  board.computer_offense_square ||
-              board.computer_defense_square ||
-              board.unmarked_keys.find { |sqr| sqr == 5 } ||
-              board.unmarked_keys.sample
+    square =  board.pick_square_offensively ||
+              board.pick_square_defensively ||
+              board.pick_center_square ||
+              board.pick_random_square
 
     board[square] = computer.marker
   end

@@ -152,7 +152,7 @@ class Player
     reset
   end
 
-  def won_round
+  def increment_score
     self.score += 1
   end
 
@@ -361,9 +361,9 @@ class TTTgame
   def update_score
     case result
     when :human
-      human.won_round
+      human.increment_score
     when :computer
-      computer.won_round
+      computer.increment_score
     end
   end
 

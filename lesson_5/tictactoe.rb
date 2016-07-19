@@ -44,25 +44,11 @@ class Board
   end
 
   def pick_square_offensively
-    WINNING_LINES.each do |line|
-      sqrs = squares.values_at(*line)
-      if count_computer_marked(sqrs) == 2 &&
-         count_unmarked(sqrs) == 1
-        return unmarked_square(line)
-      end
-    end
-    nil
+    pick_square(:computer)
   end
 
   def pick_square_defensively
-    WINNING_LINES.each do |line|
-      sqrs = squares.values_at(*line)
-      if count_human_marked(sqrs) == 2 &&
-         count_unmarked(sqrs) == 1
-        return unmarked_square(line)
-      end
-    end
-    nil
+    pick_square(:human)
   end
 
   def pick_center_square
@@ -89,18 +75,30 @@ class Board
 
   private
 
+  def pick_square(player)
+    WINNING_LINES.each do |line|
+      sqrs = squares.values_at(*line)
+      if count_marked(sqrs, player) == 2 &&
+         count_unmarked(sqrs) == 1
+        return unmarked_square(line)
+      end
+    end
+    nil
+  end
+
   def three_identical_markers?(squares)
     markers = squares.select(&:marked?).collect(&:marker)
     return false if markers.size != 3
     markers.max == markers.min
   end
 
-  def count_computer_marked(squares)
-    squares.count(&:marked_computer?)
-  end
-
-  def count_human_marked(squares)
-    squares.count(&:marked_human?)
+  def count_marked(squares, player)
+    case player
+    when :computer
+      squares.count(&:marked_computer?)
+    when :human
+      squares.count(&:marked_human?)
+    end
   end
 
   def count_unmarked(squares)
@@ -108,9 +106,9 @@ class Board
   end
 
   def unmarked_square(line)
-    squares.select do |key, square|
+    squares.find do |key, square|
       line.include?(key) && square.unmarked?
-    end.keys.first
+    end.first
   end
 end
 

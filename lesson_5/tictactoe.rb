@@ -284,37 +284,43 @@ class TTTgame
     @human = Human.new(HUMAN_MARKER)
     @computer = Computer.new(COMPUTER_MARKER)
     @current_marker = FIRST_TO_MOVE
+    set_rounds
   end
 
-  # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
-  def play
-    set_rounds
+  def start
     loop do
-      loop do
-        display_board
-        loop do
-          current_player_moves
-          break if board.someone_won? || board.full?
-          clear_screen_and_display_board if human_turn?
-        end
-        detect_result
-        update_score
-        display_result
-        break if game_over?
-        reset_round
-      end
-      display_game_winner
+      play_game
       break unless play_again?
       reset_game
     end
     display_goodbye_message
   end
-  # rubocop:enable Metrics/AbcSize Metrics/MethodLength
 
   private
 
   attr_reader :human, :computer
   attr_accessor :board, :result, :points_to_win, :current_marker
+
+  def play_round
+    display_board
+    loop do
+      current_player_moves
+      break if board.someone_won? || board.full?
+      clear_screen_and_display_board if human_turn?
+    end
+  end
+
+  def play_game
+    loop do
+      play_round
+      detect_result
+      update_score
+      display_result
+      break if game_over?
+      reset_round
+    end
+    display_game_winner
+  end
 
   def set_rounds
     loop do
@@ -396,13 +402,16 @@ class TTTgame
   end
 
   def current_player_moves
-    if human_turn?
-      human_moves
-      self.current_marker = COMPUTER_MARKER
-    else
-      computer_moves
-      self.current_marker = HUMAN_MARKER
-    end
+    human_turn? ? human_moves : computer_moves
+    alternate_turn
+  end
+
+  def alternate_turn
+    self.current_marker = if current_marker == HUMAN_MARKER
+                            COMPUTER_MARKER
+                          else
+                            HUMAN_MARKER
+                          end
   end
 
   def human_turn?
@@ -418,4 +427,4 @@ class TTTgame
   end
 end
 
-TTTgame.new.play
+TTTgame.new.start

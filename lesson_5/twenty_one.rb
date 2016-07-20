@@ -9,6 +9,7 @@ class Deck
   def initialize
     @cards = []
     SETS.each { |set| @cards << Card.new(*set) }
+    @cards.shuffle!
   end
 
   def deal
@@ -67,7 +68,7 @@ end
 class Game
   def initialize
     @deck = Deck.new
-    puts @deck.cards.shuffle
+    puts @deck.cards
   end
 
   def start

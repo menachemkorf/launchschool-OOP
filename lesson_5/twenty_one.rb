@@ -12,8 +12,10 @@ class Deck
     @cards.shuffle!
   end
 
-  def deal
-
+  def deal(participant, number=1)
+    number.times do
+      participant.cards << cards.pop
+    end
   end
 
   def to_s
@@ -40,8 +42,11 @@ class Card
 end
 
 class Participant
+  attr_accessor :cards
+
   def initialize
     # cards, name
+    @cards = []
   end
 
   def hit
@@ -70,14 +75,17 @@ class Dealer < Participant
 end
 
 class Game
+  attr_accessor :deck, :player, :dealer
+
   def initialize
     @deck = Deck.new
+    @player = Player.new
+    @dealer = Dealer.new
     # puts @deck.cards
   end
 
   def start
-
-    # deal_cards
+    deal_cards
     # show_initial_cards
     # player_turn
     # dealer_turn
@@ -86,6 +94,13 @@ class Game
 
   private
 
+  def deal_cards
+    deck.deal(player, 2)
+    deck.deal(dealer, 2)
+
+    puts player.cards
+    puts dealer.cards
+  end
 end
 
 Game.new.start

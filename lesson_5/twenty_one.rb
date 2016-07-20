@@ -33,6 +33,10 @@ class Card
   def to_s
     value.to_s
   end
+
+  def suit_symbols
+    {'H' => '♥', 'D' => '♦', 'S' => '♠', 'C' => '♣'}
+  end
 end
 
 class Participant
@@ -68,7 +72,7 @@ end
 class Game
   def initialize
     @deck = Deck.new
-    puts @deck.cards
+    # puts @deck.cards
   end
 
   def start
@@ -85,3 +89,19 @@ class Game
 end
 
 Game.new.start
+
+def draw_card
+  puts "+------+"
+  puts "|♥10   |"
+  puts "|      |"
+  puts "|      |"
+  puts "|   10♥|"
+  puts "+------+"
+end
+
+def draw_card
+  puts "⎡‾‾‾"
+  puts "⎣___"
+end
+
+draw_card

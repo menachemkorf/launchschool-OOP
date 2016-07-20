@@ -89,19 +89,3 @@ class Game
 end
 
 Game.new.start
-
-def draw_card
-  puts "+------+"
-  puts "|♥10   |"
-  puts "|      |"
-  puts "|      |"
-  puts "|   10♥|"
-  puts "+------+"
-end
-
-def draw_card
-  puts "⎡‾‾‾"
-  puts "⎣___"
-end
-
-draw_card

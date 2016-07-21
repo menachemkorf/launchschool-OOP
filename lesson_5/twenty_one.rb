@@ -49,6 +49,14 @@ class Participant
     @cards = []
   end
 
+  def show_cards
+    visible_cards = []
+    cards.each do |card|
+      visible_cards << "#{card.face} of #{card.suit}"
+    end
+    visible_cards.join(', ')
+  end
+
   def hit
 
   end
@@ -81,12 +89,11 @@ class Game
     @deck = Deck.new
     @player = Player.new
     @dealer = Dealer.new
-    # puts @deck.cards
   end
 
   def start
     deal_cards
-    # show_initial_cards
+    show_initial_cards
     # player_turn
     # dealer_turn
     # show_result
@@ -97,9 +104,13 @@ class Game
   def deal_cards
     deck.deal(player, 2)
     deck.deal(dealer, 2)
+  end
 
-    puts player.cards
+  def show_initial_cards
+    puts "Player has #{player.show_cards}"
+    puts
     puts dealer.cards
+    # puts "Dealer has #{dealer.cards}"
   end
 end
 

@@ -44,7 +44,7 @@ class Card
 end
 
 class Participant
-  attr_accessor :cards
+  attr_accessor :cards, :choice
 
   def initialize
     # cards, name
@@ -64,16 +64,22 @@ class Participant
     "#{first_card.face} of #{first_card.suit}"
   end
 
-  def hit
-
+  def hit?
+    self.choice == 'h'
   end
 
-  def stay
+  def stay?
+    self.choice == 's'
+  end
 
+  def sum_cards
+
+    cards.map {|card| card.face.to_i }.inject {|sum, x| sum + x }
   end
 
   def busted?
-
+    binding.pry
+    sum_cards >= 21
   end
 
   def total
@@ -83,6 +89,16 @@ end
 
 class Player < Participant
 
+  def choose
+    answer = nil
+    loop do
+      puts "(h)it or (s)tay"
+      answer = gets.chomp.downcase
+      break if %w(h s).include?(answer)
+      puts "Invalid option!"
+    end
+    self.choice = answer
+  end
 end
 
 class Dealer < Participant
@@ -101,7 +117,7 @@ class Game
   def start
     deal_cards
     show_initial_cards
-    # player_turn
+    player_turn
     # dealer_turn
     # show_result
   end
@@ -114,8 +130,20 @@ class Game
   end
 
   def show_initial_cards
+    system('clear') || system('cls')
     puts "Player has [#{player.show_all_cards}]"
     puts "Dealer has [#{dealer.show_first_card}] and ?"
+  end
+
+  def player_turn
+    loop do
+      player.choose
+      if player.hit?
+        deck.deal(player)
+        show_initial_cards
+      end
+      break if player.stay? || player.busted?
+    end
   end
 end
 

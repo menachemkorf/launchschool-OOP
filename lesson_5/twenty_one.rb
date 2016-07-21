@@ -1,3 +1,5 @@
+require 'pry'
+
 class Deck
 
   SUITS = ['H', 'D', 'S', 'C']
@@ -49,12 +51,17 @@ class Participant
     @cards = []
   end
 
-  def show_cards
+  def show_all_cards
     visible_cards = []
     cards.each do |card|
       visible_cards << "#{card.face} of #{card.suit}"
     end
     visible_cards.join(', ')
+  end
+
+  def show_first_card
+    first_card = cards.first
+    "#{first_card.face} of #{first_card.suit}"
   end
 
   def hit
@@ -107,10 +114,8 @@ class Game
   end
 
   def show_initial_cards
-    puts "Player has #{player.show_cards}"
-    puts
-    puts dealer.cards
-    # puts "Dealer has #{dealer.cards}"
+    puts "Player has [#{player.show_all_cards}]"
+    puts "Dealer has [#{dealer.show_first_card}] and ?"
   end
 end
 

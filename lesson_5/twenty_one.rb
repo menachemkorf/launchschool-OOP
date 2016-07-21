@@ -72,18 +72,28 @@ class Participant
     self.choice == 's'
   end
 
-  def sum_cards
+  def total
+    values = cards.map { |card| card.face }
+    sum = 0
 
-    cards.map {|card| card.face.to_i }.inject {|sum, x| sum + x }
+    values.each do |value|
+      sum += if value == "A"
+             11
+           elsif value.to_i == 0
+             10
+           else
+             value.to_i
+           end
+    end
+
+    values.select { |value| value == "A" }.count.times do
+      sum -= 10 if sum > 21
+    end
+    sum
   end
 
   def busted?
-    binding.pry
-    sum_cards >= 21
-  end
-
-  def total
-
+    total > 21
   end
 end
 

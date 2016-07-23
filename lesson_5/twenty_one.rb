@@ -112,7 +112,12 @@ class Player < Participant
 end
 
 class Dealer < Participant
+  # def choose
 
+  #   deck.deal()
+
+  #   if total >= 17
+  # end
 end
 
 class Game
@@ -128,8 +133,8 @@ class Game
     deal_cards
     show_initial_cards
     player_turn
-    # dealer_turn
-    # show_result
+    dealer_turn unless player.busted?
+    show_result
   end
 
   private
@@ -141,7 +146,7 @@ class Game
 
   def show_initial_cards
     system('clear') || system('cls')
-    puts "Player has [#{player.show_all_cards}]"
+    puts "Player has [#{player.show_all_cards}]. For a total of #{player.total}"
     puts "Dealer has [#{dealer.show_first_card}] and ?"
   end
 
@@ -153,6 +158,31 @@ class Game
         show_initial_cards
       end
       break if player.stay? || player.busted?
+    end
+  end
+
+  def dealer_turn
+    puts "Dealer's choosing..."
+    until dealer.total >= 17 do
+      deck.deal(dealer)
+    end
+  end
+
+  def show_result
+    system('clear') || system('cls')
+    puts "Player has [#{player.show_all_cards}]. For a total of #{player.total}"
+    puts "Dealer has [#{dealer.show_all_cards}].for a total of #{dealer.total}"
+
+    if player.busted?
+      puts "Player busted!"
+    elsif dealer.busted?
+      puts "Dealer busted!."
+    elsif player.total > dealer.total
+      puts "Player won!"
+    elsif dealer.total > player.total
+      puts "Dealer won!"
+    else
+      puts "It's a tie!"
     end
   end
 end

@@ -9,9 +9,10 @@ class Deck
   attr_accessor :cards
 
   def initialize
-    @cards = []
-    SETS.each { |set| @cards << Card.new(*set) }
-    @cards.shuffle!
+    # @cards = []
+    # SETS.each { |set| @cards << Card.new(*set) }
+    # @cards.shuffle!
+    reset
   end
 
   def deal(participant, number=1)
@@ -22,6 +23,12 @@ class Deck
 
   def to_s
     cards
+  end
+
+  def reset
+    @cards = []
+    SETS.each { |set| @cards << Card.new(*set) }
+    @cards.shuffle!
   end
 end
 
@@ -48,6 +55,11 @@ class Participant
 
   def initialize
     # cards, name
+    # @cards = []
+    reset
+  end
+
+  def reset
     @cards = []
   end
 
@@ -138,15 +150,25 @@ class Game
   end
 
   def start
-    deal_cards
-    display_initial_cards
-    player_turn
-    dealer_turn unless player.busted?
-    display_all_cards
-    display_result
+    loop do
+      deal_cards
+      display_initial_cards
+      player_turn
+      dealer_turn unless player.busted?
+      display_all_cards
+      display_result
+      break unless play_again?
+      reset_round
+    end
   end
 
   private
+
+  def reset_round
+    deck.reset
+    player.reset
+    dealer.reset
+  end
 
   def deal_cards
     deck.deal(player, 2)
@@ -178,6 +200,7 @@ class Game
   end
 
   def display_all_cards
+    clear
     puts "Player has [#{player.show_all_cards}]. For a total of #{player.total}"
     puts "Dealer has [#{dealer.show_all_cards}]. For a total of #{dealer.total}"
   end
@@ -194,6 +217,17 @@ class Game
     else
       puts "It's a tie!"
     end
+  end
+
+  def play_again?
+    answer = nil
+    loop do
+      puts "Would you like to play again? (y/n)"
+      answer = gets.chomp.downcase
+      break if %(y n).include?(answer)
+      puts "Invalid option!"
+    end
+    answer == 'y'
   end
 end
 

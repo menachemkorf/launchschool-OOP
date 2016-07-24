@@ -112,15 +112,23 @@ class Player < Participant
 end
 
 class Dealer < Participant
-  # def choose
 
-  #   deck.deal()
+end
 
-  #   if total >= 17
-  # end
+module ScreenHelper
+  def clear
+    system('clear') || system('cls')
+  end
+
+  def pause
+    puts "Press enter to continue."
+    gets
+  end
 end
 
 class Game
+  include ScreenHelper
+
   attr_accessor :deck, :player, :dealer
 
   def initialize
@@ -145,7 +153,7 @@ class Game
   end
 
   def show_initial_cards
-    system('clear') || system('cls')
+    clear
     puts "Player has [#{player.show_all_cards}]. For a total of #{player.total}"
     puts "Dealer has [#{dealer.show_first_card}] and ?"
   end
@@ -169,9 +177,8 @@ class Game
   end
 
   def show_result
-    system('clear') || system('cls')
     puts "Player has [#{player.show_all_cards}]. For a total of #{player.total}"
-    puts "Dealer has [#{dealer.show_all_cards}].for a total of #{dealer.total}"
+    puts "Dealer has [#{dealer.show_all_cards}]. For a total of #{dealer.total}"
 
     if player.busted?
       puts "Player busted!"

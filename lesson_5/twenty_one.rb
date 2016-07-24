@@ -139,10 +139,11 @@ class Game
 
   def start
     deal_cards
-    show_initial_cards
+    display_initial_cards
     player_turn
     dealer_turn unless player.busted?
-    show_result
+    display_all_cards
+    display_result
   end
 
   private
@@ -152,7 +153,7 @@ class Game
     deck.deal(dealer, 2)
   end
 
-  def show_initial_cards
+  def display_initial_cards
     clear
     puts "Player has [#{player.show_all_cards}]. For a total of #{player.total}"
     puts "Dealer has [#{dealer.show_first_card}] and ?"
@@ -163,7 +164,7 @@ class Game
       player.choose
       if player.hit?
         deck.deal(player)
-        show_initial_cards
+        display_initial_cards
       end
       break if player.stay? || player.busted?
     end
@@ -176,10 +177,12 @@ class Game
     end
   end
 
-  def show_result
+  def display_all_cards
     puts "Player has [#{player.show_all_cards}]. For a total of #{player.total}"
     puts "Dealer has [#{dealer.show_all_cards}]. For a total of #{dealer.total}"
+  end
 
+  def display_result
     if player.busted?
       puts "Player busted!"
     elsif dealer.busted?

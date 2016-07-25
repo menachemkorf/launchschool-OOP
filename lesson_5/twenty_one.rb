@@ -48,7 +48,7 @@ class Card
 end
 
 class Participant
-  attr_accessor :cards, :choice, :name
+  attr_accessor :cards, :choice, :name, :score
 
   def initialize
     set_name
@@ -56,7 +56,16 @@ class Participant
   end
 
   def reset
+    reset_round
+    self.score = 0
+  end
+
+  def reset_round
     @cards = []
+  end
+
+  def increment_score
+    self.score += 1
   end
 
   def show_all_cards
@@ -108,6 +117,18 @@ class Participant
   def to_s
     name
   end
+
+  def declare_busted
+    puts "#{self} busted!"
+  end
+
+  def declare_won_round
+    puts "#{self} won!"
+  end
+
+  def declare_won_game
+    puts "#{self} won the game!"
+  end
 end
 
 class Player < Participant
@@ -146,7 +167,6 @@ module ScreenHelper
   end
 
   def pause
-    # don't need this method
     puts "Press enter to continue."
     gets
   end
@@ -155,16 +175,17 @@ end
 class Game
   include ScreenHelper
 
-  attr_accessor :deck, :player, :dealer
+  attr_accessor :deck, :player, :dealer, :points_to_win, :result
 
   def initialize
+    clear
     @deck = Deck.new
     @player = Player.new
     @dealer = Dealer.new
+    set_rounds
   end
 
   def start
-    # add rounds, break down into play_game and play_round methods ?
     loop do
       play_game
       break unless play_again?
@@ -175,12 +196,29 @@ class Game
   private
 
   def play_game
-    deal_cards
-    display_initial_cards
-    player_turn
-    dealer_turn unless player.busted?
-    display_all_cards
-    display_result
+    loop do
+      deal_cards
+      display_cards(:partial)
+      player_turn
+      dealer_turn unless player.busted?
+      detect_result
+      update_score
+      display_result
+      break if game_over?
+      reset_round
+    end
+    display_game_winner
+  end
+
+  def set_rounds
+    loop do
+      puts "Hi #{player}. How many points do you want to play for?"
+      self.points_to_win = gets.chomp.to_i
+      break if points_to_win > 0
+      puts "Invalid option!"
+    end
+    puts "Ok, so whoever gets #{points_to_win} points first wins."
+    pause
   end
 
   def reset_game
@@ -189,15 +227,39 @@ class Game
     dealer.reset
   end
 
+  def reset_round
+    deck.reset
+    player.reset_round
+    dealer.reset_round
+  end
+
+  def display_game_winner
+    game_winner.declare_won_game
+  end
+
+  def game_winner
+    [player, dealer].find { |player| player.score == points_to_win }
+  end
+
+  def game_over?
+    !!game_winner
+  end
+
   def deal_cards
     deck.deal(player, 2)
     deck.deal(dealer, 2)
   end
 
-  def display_initial_cards
+  def display_cards(options)
     clear
+    puts "#{player} has #{player.score} points. #{dealer} has #{dealer.score} points."
     puts "#{player} has [#{player.show_all_cards}]. For a total of #{player.total}"
-    puts "#{dealer} has [#{dealer.show_first_card}] and ?"
+
+    if options == :partial
+      puts "#{dealer} has [#{dealer.show_first_card}] and ?"
+    else
+      puts "#{dealer} has [#{dealer.show_all_cards}]. For a total of #{dealer.total}"
+    end
   end
 
   def player_turn
@@ -205,7 +267,7 @@ class Game
       player.choose
       if player.hit?
         deck.deal(player)
-        display_initial_cards
+        display_cards(:partial)
       end
       break if player.stay? || player.busted?
     end
@@ -218,26 +280,51 @@ class Game
     end
   end
 
-  def display_all_cards
-    clear
-    puts "#{player} has [#{player.show_all_cards}]. For a total of #{player.total}"
-    puts "#{dealer} has [#{dealer.show_all_cards}]. For a total of #{dealer.total}"
+  def detect_result
+    self.result = if player.busted? # || (dealer.total > player.total)
+                    :player_busted
+                  elsif dealer.busted? # || (player.total > dealer.total)
+                    :dealer_busted
+                  elsif player.total > dealer.total
+                    :player_won
+                  elsif dealer.total > player.total
+                    :dealer_won
+                  else
+                    :tie
+                  end
+  end
+
+  def update_score
+    case result
+    when :player_busted, :dealer_won
+      dealer.increment_score
+    when :dealer_busted, :player_won
+      player.increment_score
+    end
   end
 
   def display_result
-    # refactor using @result ?
-    # refactor messages into participant objects ?
-    if player.busted?
-      puts "#{player} busted!"
-    elsif dealer.busted?
-      puts "#{dealer} busted!."
-    elsif player.total > dealer.total
-      puts "#{player} won!"
-    elsif dealer.total > player.total
-      puts "#{dealer} won!"
+    display_cards(:full)
+
+    case result
+    when :player_busted
+      player.declare_busted
+      dealer.declare_won_round
+    when :dealer_busted
+      dealer.declare_busted
+      player.declare_won_round
+    when :player_won
+      player.declare_won_round
+    when :dealer_won
+      dealer.declare_won_round
     else
-      puts "It's a tie!"
+      declare_tie
     end
+    pause
+  end
+
+  def declare_tie
+    puts "It's a tie!"
   end
 
   def play_again?

@@ -9,9 +9,6 @@ class Deck
   attr_accessor :cards
 
   def initialize
-    # @cards = []
-    # SETS.each { |set| @cards << Card.new(*set) }
-    # @cards.shuffle!
     reset
   end
 
@@ -51,11 +48,10 @@ class Card
 end
 
 class Participant
-  attr_accessor :cards, :choice
+  attr_accessor :cards, :choice, :name
 
   def initialize
-    # cards, name
-    # @cards = []
+    set_name
     reset
   end
 
@@ -85,6 +81,7 @@ class Participant
   end
 
   def total
+    # needs refactoring
     values = cards.map { |card| card.face }
     sum = 0
 
@@ -107,9 +104,23 @@ class Participant
   def busted?
     total > 21
   end
+
+  def to_s
+    name
+  end
 end
 
 class Player < Participant
+  def set_name
+    n = nil
+    loop do
+      puts "What's your name?"
+      n = gets.chomp.strip
+      break unless n.empty?
+      puts "Sorry, must enter a value."
+    end
+    self.name = n
+  end
 
   def choose
     answer = nil
@@ -124,7 +135,9 @@ class Player < Participant
 end
 
 class Dealer < Participant
-
+  def set_name
+    self.name = ['R2D2', 'Hal', 'Chappie', 'Sonny', 'Number 5'].sample
+  end
 end
 
 module ScreenHelper
@@ -133,6 +146,7 @@ module ScreenHelper
   end
 
   def pause
+    # don't need this method
     puts "Press enter to continue."
     gets
   end
@@ -150,21 +164,26 @@ class Game
   end
 
   def start
+    # add rounds, break down into play_game and play_round methods ?
     loop do
-      deal_cards
-      display_initial_cards
-      player_turn
-      dealer_turn unless player.busted?
-      display_all_cards
-      display_result
+      play_game
       break unless play_again?
-      reset_round
+      reset_game
     end
   end
 
   private
 
-  def reset_round
+  def play_game
+    deal_cards
+    display_initial_cards
+    player_turn
+    dealer_turn unless player.busted?
+    display_all_cards
+    display_result
+  end
+
+  def reset_game
     deck.reset
     player.reset
     dealer.reset
@@ -177,8 +196,8 @@ class Game
 
   def display_initial_cards
     clear
-    puts "Player has [#{player.show_all_cards}]. For a total of #{player.total}"
-    puts "Dealer has [#{dealer.show_first_card}] and ?"
+    puts "#{player} has [#{player.show_all_cards}]. For a total of #{player.total}"
+    puts "#{dealer} has [#{dealer.show_first_card}] and ?"
   end
 
   def player_turn
@@ -201,19 +220,21 @@ class Game
 
   def display_all_cards
     clear
-    puts "Player has [#{player.show_all_cards}]. For a total of #{player.total}"
-    puts "Dealer has [#{dealer.show_all_cards}]. For a total of #{dealer.total}"
+    puts "#{player} has [#{player.show_all_cards}]. For a total of #{player.total}"
+    puts "#{dealer} has [#{dealer.show_all_cards}]. For a total of #{dealer.total}"
   end
 
   def display_result
+    # refactor using @result ?
+    # refactor messages into participant objects ?
     if player.busted?
-      puts "Player busted!"
+      puts "#{player} busted!"
     elsif dealer.busted?
-      puts "Dealer busted!."
+      puts "#{dealer} busted!."
     elsif player.total > dealer.total
-      puts "Player won!"
+      puts "#{player} won!"
     elsif dealer.total > player.total
-      puts "Dealer won!"
+      puts "#{dealer} won!"
     else
       puts "It's a tie!"
     end

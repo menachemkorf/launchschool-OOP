@@ -45,6 +45,32 @@ class Card
   def suit_symbols
     {'H' => '♥', 'D' => '♦', 'S' => '♠', 'C' => '♣'}
   end
+
+  def self.face_down
+    ["+------+",
+     "|?     |",
+     "|      |",
+     "|      |",
+     "|     ?|",
+     "+------+"]
+  end
+
+  def image
+    ["+------+",
+    "|#{format(face, :left)}    |",
+    "|#{suit_symbols[suit]}     |",
+    "|     #{suit_symbols[suit]}|",
+    "|    #{format(face, :right)}|",
+    "+------+"]
+  end
+
+  def format(str, position)
+    if str.length == 2
+      str
+    else
+      position == :left ? "#{str} " : " #{str}"
+    end
+  end
 end
 
 class Participant
@@ -69,16 +95,20 @@ class Participant
   end
 
   def show_all_cards
-    visible_cards = []
-    cards.each do |card|
-      visible_cards << "#{card.face} of #{card.suit}"
+
+    card_images = [*cards.map(&:image)]
+
+    card_images.transpose.each do |line|
+      puts line.join(" ")
     end
-    visible_cards.join(', ')
   end
 
   def show_first_card
-    first_card = cards.first
-    "#{first_card.face} of #{first_card.suit}"
+    card_images = [cards.first.image, Card.face_down]
+
+    card_images.transpose.each do |line|
+      puts line.join(" ")
+    end
   end
 
   def hit?
@@ -253,13 +283,19 @@ class Game
   def display_cards(options)
     clear
     puts "#{player} has #{player.score} points. #{dealer} has #{dealer.score} points."
-    puts "#{player} has [#{player.show_all_cards}]. For a total of #{player.total}"
-
+    puts ""
+    puts "#{player} has :"
+    player.show_all_cards
+    puts "For a total of #{player.total}"
+    puts ""
+    puts "#{dealer} has:"
     if options == :partial
-      puts "#{dealer} has [#{dealer.show_first_card}] and ?"
+      dealer.show_first_card
     else
-      puts "#{dealer} has [#{dealer.show_all_cards}]. For a total of #{dealer.total}"
+      dealer.show_all_cards
+      puts "For a total of #{dealer.total}"
     end
+    puts ""
   end
 
   def player_turn
@@ -274,16 +310,15 @@ class Game
   end
 
   def dealer_turn
-    puts "Dealer's choosing..."
     until dealer.total >= 17 do
       deck.deal(dealer)
     end
   end
 
   def detect_result
-    self.result = if player.busted? # || (dealer.total > player.total)
+    self.result = if player.busted?
                     :player_busted
-                  elsif dealer.busted? # || (player.total > dealer.total)
+                  elsif dealer.busted?
                     :dealer_busted
                   elsif player.total > dealer.total
                     :player_won

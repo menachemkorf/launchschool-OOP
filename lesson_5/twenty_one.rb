@@ -1,6 +1,4 @@
 # frozen_string_literal: true
-require 'pry'
-
 class Deck
   SUITS = ['♥', '♦', '♠', '♣'].freeze
   FACES = ['2', '3', '4', '5', '6', '7', '8', '9', '10',
@@ -19,10 +17,6 @@ class Deck
     end
   end
 
-  def to_s
-    cards
-  end
-
   def reset
     @cards = []
     SETS.each { |set| @cards << Card.new(*set) }
@@ -31,20 +25,11 @@ class Deck
 end
 
 class Card
-  attr_accessor :suit, :face, :value
+  attr_accessor :suit, :face
 
   def initialize(suit, face)
     @suit = suit
     @face = face
-    @value = { suit: suit, face: face }
-  end
-
-  def to_s
-    value.to_s
-  end
-
-  def suit_symbols
-    { 'H' => '♥', 'D' => '♦', 'S' => '♠', 'C' => '♣' }
   end
 
   def self.face_down
@@ -97,15 +82,15 @@ class Participant
 
   def show_all_cards
     card_images = [*cards.map(&:image)]
-
-    card_images.transpose.each do |line|
-      puts line.join(" ")
-    end
+    draw(card_images)
   end
 
   def show_first_card
     card_images = [cards.first.image, Card.face_down]
+    draw(card_images)
+  end
 
+  def draw(card_images)
     card_images.transpose.each do |line|
       puts line.join(" ")
     end
@@ -120,7 +105,6 @@ class Participant
   end
 
   def total
-    # needs refactoring
     values = cards.map(&:face)
     sum = 0
 
@@ -135,13 +119,13 @@ class Participant
     end
 
     values.select { |value| value == "A" }.count.times do
-      sum -= 10 if sum > 21
+      sum -= 10 if sum > Game::HIGHEST_NUMBER
     end
     sum
   end
 
   def busted?
-    total > 21
+    total > Game::HIGHEST_NUMBER
   end
 
   def to_s
@@ -176,7 +160,7 @@ class Player < Participant
   def choose
     answer = nil
     loop do
-      puts "(h)it or (s)tay"
+      puts "(h)it or (s)tay?"
       answer = gets.chomp.downcase
       break if %w(h s).include?(answer)
       puts "Invalid option!"
@@ -205,10 +189,13 @@ end
 class Game
   include ScreenHelper
 
+  DEALER_STAYS = 17
+  HIGHEST_NUMBER = 21
+
   attr_accessor :deck, :player, :dealer, :points_to_win, :result
 
   def initialize
-    clear
+    display_welcome_message
     @deck = Deck.new
     @player = Player.new
     @dealer = Dealer.new
@@ -221,23 +208,37 @@ class Game
       break unless play_again?
       reset_game
     end
+    display_goodbye_message
   end
 
   private
 
+  def display_welcome_message
+    clear
+    puts "Welcome to Twenty-One!"
+  end
+
+  def display_goodbye_message
+    puts "Thank you for playing Twenty-One! Good bye!"
+  end
+
   def play_game
     loop do
-      deal_cards
-      display_cards(:partial)
-      player_turn
-      dealer_turn unless player.busted?
-      detect_result
-      update_score
-      display_result
+      play_round
       break if game_over?
       reset_round
     end
     display_game_winner
+  end
+
+  def play_round
+    deal_cards
+    display_cards(:partial)
+    player_turn
+    dealer_turn unless player.busted?
+    detect_result
+    update_score
+    display_result
   end
 
   def set_rounds
@@ -282,20 +283,33 @@ class Game
 
   def display_cards(options)
     clear
-    puts "#{player} has #{player.score} points. #{dealer} has #{dealer.score} points."
+    display_score
     puts ""
-    puts "#{player} has :"
+    display_player_cards
+    puts ""
+    display_dealer_cards(options)
+    puts ""
+  end
+
+  def display_score
+    puts "#{player} has #{player.score} points. "\
+         "#{dealer} has #{dealer.score} points."
+  end
+
+  def display_player_cards
+    puts "#{player}'s cards:"
     player.show_all_cards
-    puts "For a total of #{player.total}"
-    puts ""
-    puts "#{dealer} has:"
+    puts "Total = #{player.total}"
+  end
+
+  def display_dealer_cards(options)
+    puts "#{dealer}'s cards:"
     if options == :partial
       dealer.show_first_card
     else
       dealer.show_all_cards
-      puts "For a total of #{dealer.total}"
+      puts "Total = #{dealer.total}"
     end
-    puts ""
   end
 
   def player_turn
@@ -310,7 +324,7 @@ class Game
   end
 
   def dealer_turn
-    deck.deal(dealer) until dealer.total >= 17
+    deck.deal(dealer) until dealer.total >= DEALER_STAYS
   end
 
   def detect_result
@@ -338,22 +352,29 @@ class Game
 
   def display_result
     display_cards(:full)
+    display_busted
+    display_round_winner
+    pause
+  end
 
+  def display_busted
     case result
     when :player_busted
       player.declare_busted
-      dealer.declare_won_round
     when :dealer_busted
       dealer.declare_busted
+    end
+  end
+
+  def display_round_winner
+    case result
+    when :player_won, :dealer_busted
       player.declare_won_round
-    when :player_won
-      player.declare_won_round
-    when :dealer_won
+    when :dealer_won, :player_busted
       dealer.declare_won_round
     else
       declare_tie
     end
-    pause
   end
 
   def declare_tie

@@ -1,9 +1,10 @@
+# frozen_string_literal: true
 require 'pry'
 
 class Deck
-
-  SUITS = ['H', 'D', 'S', 'C']
-  FACES = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
+  SUITS = ['H', 'D', 'S', 'C'].freeze
+  FACES = ['2', '3', '4', '5', '6', '7', '8', '9', '10',
+           'J', 'Q', 'K', 'A'].freeze
   SETS = SUITS.product(FACES)
 
   attr_accessor :cards
@@ -43,7 +44,7 @@ class Card
   end
 
   def suit_symbols
-    {'H' => '♥', 'D' => '♦', 'S' => '♠', 'C' => '♣'}
+    { 'H' => '♥', 'D' => '♦', 'S' => '♠', 'C' => '♣' }
   end
 
   def self.face_down
@@ -57,11 +58,11 @@ class Card
 
   def image
     ["+------+",
-    "|#{format(face, :left)}    |",
-    "|#{suit_symbols[suit]}     |",
-    "|     #{suit_symbols[suit]}|",
-    "|    #{format(face, :right)}|",
-    "+------+"]
+     "|#{format(face, :left)}    |",
+     "|#{suit_symbols[suit]}     |",
+     "|     #{suit_symbols[suit]}|",
+     "|    #{format(face, :right)}|",
+     "+------+"]
   end
 
   def format(str, position)
@@ -95,7 +96,6 @@ class Participant
   end
 
   def show_all_cards
-
     card_images = [*cards.map(&:image)]
 
     card_images.transpose.each do |line|
@@ -112,26 +112,26 @@ class Participant
   end
 
   def hit?
-    self.choice == 'h'
+    choice == 'h'
   end
 
   def stay?
-    self.choice == 's'
+    choice == 's'
   end
 
   def total
     # needs refactoring
-    values = cards.map { |card| card.face }
+    values = cards.map(&:face)
     sum = 0
 
     values.each do |value|
       sum += if value == "A"
-             11
-           elsif value.to_i == 0
-             10
-           else
-             value.to_i
-           end
+               11
+             elsif value.to_i == 0
+               10
+             else
+               value.to_i
+             end
     end
 
     values.select { |value| value == "A" }.count.times do
@@ -310,9 +310,7 @@ class Game
   end
 
   def dealer_turn
-    until dealer.total >= 17 do
-      deck.deal(dealer)
-    end
+    deck.deal(dealer) until dealer.total >= 17
   end
 
   def detect_result

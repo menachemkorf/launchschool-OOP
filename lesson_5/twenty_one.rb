@@ -2,7 +2,7 @@
 require 'pry'
 
 class Deck
-  SUITS = ['H', 'D', 'S', 'C'].freeze
+  SUITS = ['♥', '♦', '♠', '♣'].freeze
   FACES = ['2', '3', '4', '5', '6', '7', '8', '9', '10',
            'J', 'Q', 'K', 'A'].freeze
   SETS = SUITS.product(FACES)
@@ -59,8 +59,8 @@ class Card
   def image
     ["+------+",
      "|#{format(face, :left)}    |",
-     "|#{suit_symbols[suit]}     |",
-     "|     #{suit_symbols[suit]}|",
+     "|#{suit}     |",
+     "|     #{suit}|",
      "|    #{format(face, :right)}|",
      "+------+"]
   end

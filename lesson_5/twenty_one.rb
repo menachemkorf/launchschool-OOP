@@ -186,33 +186,7 @@ module ScreenHelper
   end
 end
 
-class Game
-  include ScreenHelper
-
-  DEALER_STAYS = 17
-  HIGHEST_NUMBER = 21
-
-  attr_accessor :deck, :player, :dealer, :points_to_win, :result
-
-  def initialize
-    display_welcome_message
-    @deck = Deck.new
-    @player = Player.new
-    @dealer = Dealer.new
-    set_rounds
-  end
-
-  def start
-    loop do
-      play_game
-      break unless play_again?
-      reset_game
-    end
-    display_goodbye_message
-  end
-
-  private
-
+module Displayable
   def display_welcome_message
     clear
     puts "Welcome to Twenty-One!"
@@ -222,63 +196,8 @@ class Game
     puts "Thank you for playing Twenty-One! Good bye!"
   end
 
-  def play_game
-    loop do
-      play_round
-      break if game_over?
-      reset_round
-    end
-    display_game_winner
-  end
-
-  def play_round
-    deal_cards
-    display_cards(:partial)
-    player_turn
-    dealer_turn unless player.busted?
-    detect_result
-    update_score
-    display_result
-  end
-
-  def set_rounds
-    loop do
-      puts "Hi #{player}. How many points do you want to play for?"
-      self.points_to_win = gets.chomp.to_i
-      break if points_to_win > 0
-      puts "Invalid option!"
-    end
-    puts "Ok, so whoever gets #{points_to_win} points first wins."
-    pause
-  end
-
-  def reset_game
-    deck.reset
-    player.reset
-    dealer.reset
-  end
-
-  def reset_round
-    deck.reset
-    player.reset_round
-    dealer.reset_round
-  end
-
   def display_game_winner
     game_winner.declare_won_game
-  end
-
-  def game_winner
-    [player, dealer].find { |player| player.score == points_to_win }
-  end
-
-  def game_over?
-    !!game_winner
-  end
-
-  def deal_cards
-    deck.deal(player, 2)
-    deck.deal(dealer, 2)
   end
 
   def display_cards(options)
@@ -310,6 +229,101 @@ class Game
       dealer.show_all_cards
       puts "Total = #{dealer.total}"
     end
+  end
+
+  def display_result
+    display_cards(:full)
+    display_busted
+    display_round_winner
+    pause
+  end
+
+  def display_busted
+    case result
+    when :player_busted
+      player.declare_busted
+    when :dealer_busted
+      dealer.declare_busted
+    end
+  end
+
+  def display_round_winner
+    case result
+    when :player_won, :dealer_busted
+      player.declare_won_round
+    when :dealer_won, :player_busted
+      dealer.declare_won_round
+    else
+      declare_tie
+    end
+  end
+
+  def declare_tie
+    puts "It's a tie!"
+  end
+end
+
+class Game
+  include ScreenHelper
+  include Displayable
+
+  DEALER_STAYS = 17
+  HIGHEST_NUMBER = 21
+
+  attr_accessor :deck, :player, :dealer, :points_to_win, :result
+
+  def initialize
+    display_welcome_message
+    @deck = Deck.new
+    @player = Player.new
+    @dealer = Dealer.new
+    set_rounds
+  end
+
+  def start
+    loop do
+      play_game
+      break unless play_again?
+      reset_game
+    end
+    display_goodbye_message
+  end
+
+  private
+
+  def set_rounds
+    loop do
+      puts "Hi #{player}. How many points do you want to play for?"
+      self.points_to_win = gets.chomp.to_i
+      break if points_to_win > 0
+      puts "Invalid option!"
+    end
+    puts "Ok, so whoever gets #{points_to_win} points first wins."
+    pause
+  end
+
+  def play_game
+    loop do
+      play_round
+      break if game_over?
+      reset_round
+    end
+    display_game_winner
+  end
+
+  def play_round
+    deal_cards
+    display_cards(:partial)
+    player_turn
+    dealer_turn unless player.busted?
+    detect_result
+    update_score
+    display_result
+  end
+
+  def deal_cards
+    deck.deal(player, 2)
+    deck.deal(dealer, 2)
   end
 
   def player_turn
@@ -350,35 +364,24 @@ class Game
     end
   end
 
-  def display_result
-    display_cards(:full)
-    display_busted
-    display_round_winner
-    pause
+  def game_winner
+    [player, dealer].find { |player| player.score == points_to_win }
   end
 
-  def display_busted
-    case result
-    when :player_busted
-      player.declare_busted
-    when :dealer_busted
-      dealer.declare_busted
-    end
+  def game_over?
+    !!game_winner
   end
 
-  def display_round_winner
-    case result
-    when :player_won, :dealer_busted
-      player.declare_won_round
-    when :dealer_won, :player_busted
-      dealer.declare_won_round
-    else
-      declare_tie
-    end
+  def reset_round
+    deck.reset
+    player.reset_round
+    dealer.reset_round
   end
 
-  def declare_tie
-    puts "It's a tie!"
+  def reset_game
+    deck.reset
+    player.reset
+    dealer.reset
   end
 
   def play_again?

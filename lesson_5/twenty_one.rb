@@ -5,7 +5,7 @@ class Deck
            'J', 'Q', 'K', 'A'].freeze
   SETS = SUITS.product(FACES)
 
-  attr_accessor :cards
+  attr_reader :cards
 
   def initialize
     reset
@@ -18,10 +18,14 @@ class Deck
   end
 
   def reset
-    @cards = []
-    SETS.each { |set| @cards << Card.new(*set) }
-    @cards.shuffle!
+    self.cards = []
+    SETS.each { |set| cards << Card.new(*set) }
+    cards.shuffle!
   end
+
+  private
+
+  attr_writer :cards
 end
 
 class Card
@@ -62,6 +66,8 @@ class Card
 end
 
 module Hand
+  attr_reader :cards
+
   def total
     values = cards.map(&:face)
     sum = 0
@@ -94,6 +100,10 @@ module Hand
     total > Game::HIGHEST_NUMBER
   end
 
+  def reset_hand
+    self.cards = []
+  end
+
   def show_all_cards
     card_images = [*cards.map(&:image)]
     draw(card_images)
@@ -105,6 +115,8 @@ module Hand
   end
 
   private
+
+  attr_writer :cards
 
   def draw(card_images)
     card_images.transpose.each do |line|
@@ -131,7 +143,7 @@ class Participant
   include Hand
   include DeclareResult
 
-  attr_accessor :cards, :choice, :name, :score
+  attr_reader :score, :name
 
   def initialize
     set_name
@@ -142,32 +154,22 @@ class Participant
     self.score += 1
   end
 
-  def reset_round
-    @cards = []
-  end
-
   def reset
-    reset_round
+    reset_hand
     self.score = 0
   end
 
   def to_s
     name
   end
+
+  private
+
+  attr_writer :score, :name
+  attr_accessor :choice
 end
 
 class Player < Participant
-  def set_name
-    n = nil
-    loop do
-      puts "What's your name?"
-      n = gets.chomp.strip
-      break unless n.empty?
-      puts "Sorry, must enter a value."
-    end
-    self.name = n
-  end
-
   def choose
     answer = nil
     loop do
@@ -178,15 +180,32 @@ class Player < Participant
     end
     self.choice = answer
   end
+
+  private
+
+  def set_name
+    n = nil
+    loop do
+      puts "What's your name?"
+      n = gets.chomp.strip
+      break unless n.empty?
+      puts "Sorry, must enter a value."
+    end
+    self.name = n
+  end
 end
 
 class Dealer < Participant
+  private
+
   def set_name
     self.name = ['R2D2', 'Hal', 'Chappie', 'Sonny', 'Number 5'].sample
   end
 end
 
 module ScreenHelper
+  private
+
   def clear
     system('clear') || system('cls')
   end
@@ -198,6 +217,8 @@ module ScreenHelper
 end
 
 module Displayable
+  private
+
   def display_welcome_message
     clear
     puts "Welcome to Twenty-One!"
@@ -281,8 +302,6 @@ class Game
   DEALER_STAYS = 17
   HIGHEST_NUMBER = 21
 
-  attr_accessor :deck, :player, :dealer, :points_to_win, :result
-
   def initialize
     display_welcome_message
     @deck = Deck.new
@@ -301,6 +320,9 @@ class Game
   end
 
   private
+
+  attr_accessor :points_to_win, :result
+  attr_reader :deck, :player, :dealer
 
   def set_rounds
     loop do
@@ -385,8 +407,8 @@ class Game
 
   def reset_round
     deck.reset
-    player.reset_round
-    dealer.reset_round
+    player.reset_hand
+    dealer.reset_hand
   end
 
   def reset_game
@@ -400,7 +422,7 @@ class Game
     loop do
       puts "Would you like to play again? (y/n)"
       answer = gets.chomp.downcase
-      break if %(y n).include?(answer)
+      break if %w(y n).include?(answer)
       puts "Invalid option!"
     end
     answer == 'y'

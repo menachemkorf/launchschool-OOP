@@ -43,67 +43,25 @@ class Card
 
   def image
     ["+------+",
-     "|#{format(face, :left)}    |",
+     "|#{format_digits(face, :left)}    |",
      "|#{suit}     |",
      "|     #{suit}|",
-     "|    #{format(face, :right)}|",
+     "|    #{format_digits(face, :right)}|",
      "+------+"]
   end
 
-  def format(str, position)
-    if str.length == 2
-      str
+  private
+
+  def format_digits(digits, position)
+    if digits.length == 2
+      digits
     else
-      position == :left ? "#{str} " : " #{str}"
+      position == :left ? "#{digits} " : " #{digits}"
     end
   end
 end
 
-class Participant
-  attr_accessor :cards, :choice, :name, :score
-
-  def initialize
-    set_name
-    reset
-  end
-
-  def reset
-    reset_round
-    self.score = 0
-  end
-
-  def reset_round
-    @cards = []
-  end
-
-  def increment_score
-    self.score += 1
-  end
-
-  def show_all_cards
-    card_images = [*cards.map(&:image)]
-    draw(card_images)
-  end
-
-  def show_first_card
-    card_images = [cards.first.image, Card.face_down]
-    draw(card_images)
-  end
-
-  def draw(card_images)
-    card_images.transpose.each do |line|
-      puts line.join(" ")
-    end
-  end
-
-  def hit?
-    choice == 'h'
-  end
-
-  def stay?
-    choice == 's'
-  end
-
+module Hand
   def total
     values = cards.map(&:face)
     sum = 0
@@ -124,14 +82,38 @@ class Participant
     sum
   end
 
+  def hit?
+    choice == 'h'
+  end
+
+  def stay?
+    choice == 's'
+  end
+
   def busted?
     total > Game::HIGHEST_NUMBER
   end
 
-  def to_s
-    name
+  def show_all_cards
+    card_images = [*cards.map(&:image)]
+    draw(card_images)
   end
 
+  def show_first_card
+    card_images = [cards.first.image, Card.face_down]
+    draw(card_images)
+  end
+
+  private
+
+  def draw(card_images)
+    card_images.transpose.each do |line|
+      puts line.join(" ")
+    end
+  end
+end
+
+module DeclareResult
   def declare_busted
     puts "#{self} busted!"
   end
@@ -142,6 +124,35 @@ class Participant
 
   def declare_won_game
     puts "#{self} won the game!"
+  end
+end
+
+class Participant
+  include Hand
+  include DeclareResult
+
+  attr_accessor :cards, :choice, :name, :score
+
+  def initialize
+    set_name
+    reset
+  end
+
+  def increment_score
+    self.score += 1
+  end
+
+  def reset_round
+    @cards = []
+  end
+
+  def reset
+    reset_round
+    self.score = 0
+  end
+
+  def to_s
+    name
   end
 end
 

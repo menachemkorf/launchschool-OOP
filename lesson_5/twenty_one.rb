@@ -13,7 +13,7 @@ class Deck
 
   def deal(participant, number=1)
     number.times do
-      participant.cards << cards.pop
+      participant.hand << cards.pop
     end
   end
 
@@ -65,8 +65,16 @@ class Card
   end
 end
 
-module Hand
+class Hand
   attr_reader :cards
+
+  def initialize
+    @cards = []
+  end
+
+  def <<(card)
+    @cards << card
+  end
 
   def total
     values = cards.map(&:face)
@@ -88,19 +96,11 @@ module Hand
     sum
   end
 
-  def hit?
-    choice == 'h'
-  end
-
-  def stay?
-    choice == 's'
-  end
-
   def busted?
     total > Game::HIGHEST_NUMBER
   end
 
-  def reset_hand
+  def reset
     self.cards = []
   end
 
@@ -125,7 +125,36 @@ module Hand
   end
 end
 
-module DeclareResult
+class Participant
+  attr_reader :score, :name, :hand
+
+  def initialize
+    set_name
+    @hand = Hand.new
+    reset
+  end
+
+  def increment_score
+    self.score += 1
+  end
+
+  def reset
+    hand.reset
+    self.score = 0
+  end
+
+  def hit?
+    choice == 'h'
+  end
+
+  def stay?
+    choice == 's'
+  end
+
+  def to_s
+    name
+  end
+
   def declare_busted
     puts "#{self} busted!"
   end
@@ -136,31 +165,6 @@ module DeclareResult
 
   def declare_won_game
     puts "#{self} won the game!"
-  end
-end
-
-class Participant
-  include Hand
-  include DeclareResult
-
-  attr_reader :score, :name
-
-  def initialize
-    set_name
-    reset
-  end
-
-  def increment_score
-    self.score += 1
-  end
-
-  def reset
-    reset_hand
-    self.score = 0
-  end
-
-  def to_s
-    name
   end
 
   private
@@ -249,17 +253,17 @@ module Displayable
 
   def display_player_cards
     puts "#{player}'s cards:"
-    player.show_all_cards
-    puts "Total = #{player.total}"
+    player.hand.show_all_cards
+    puts "Total = #{player.hand.total}"
   end
 
   def display_dealer_cards(options)
     puts "#{dealer}'s cards:"
     if options == :partial
-      dealer.show_first_card
+      dealer.hand.show_first_card
     else
-      dealer.show_all_cards
-      puts "Total = #{dealer.total}"
+      dealer.hand.show_all_cards
+      puts "Total = #{dealer.hand.total}"
     end
   end
 
@@ -271,7 +275,7 @@ module Displayable
   end
 
   def display_busted
-    case result
+    case round_result
     when :player_busted
       player.declare_busted
     when :dealer_busted
@@ -280,7 +284,7 @@ module Displayable
   end
 
   def display_round_winner
-    case result
+    case round_result
     when :player_won, :dealer_busted
       player.declare_won_round
     when :dealer_won, :player_busted
@@ -321,17 +325,17 @@ class Game
 
   private
 
-  attr_accessor :points_to_win, :result
+  attr_accessor :points_to_win, :round_result
   attr_reader :deck, :player, :dealer
 
   def set_rounds
     loop do
-      puts "Hi #{player}. How many points do you want to play for?"
+      puts "Hi #{player}. How many rounds do you want to play for?"
       self.points_to_win = gets.chomp.to_i
       break if points_to_win > 0
       puts "Invalid option!"
     end
-    puts "Ok, so whoever gets #{points_to_win} points first wins."
+    puts "Ok, so whoever wins #{points_to_win} rounds first, wins the game."
     pause
   end
 
@@ -348,7 +352,7 @@ class Game
     deal_cards
     display_cards(:partial)
     player_turn
-    dealer_turn unless player.busted?
+    dealer_turn unless player.hand.busted?
     detect_result
     update_score
     display_result
@@ -366,30 +370,30 @@ class Game
         deck.deal(player)
         display_cards(:partial)
       end
-      break if player.stay? || player.busted?
+      break if player.stay? || player.hand.busted?
     end
   end
 
   def dealer_turn
-    deck.deal(dealer) until dealer.total >= DEALER_STAYS
+    deck.deal(dealer) until dealer.hand.total >= DEALER_STAYS
   end
 
   def detect_result
-    self.result = if player.busted?
-                    :player_busted
-                  elsif dealer.busted?
-                    :dealer_busted
-                  elsif player.total > dealer.total
-                    :player_won
-                  elsif dealer.total > player.total
-                    :dealer_won
-                  else
-                    :tie
-                  end
+    self.round_result = if player.hand.busted?
+                          :player_busted
+                        elsif dealer.hand.busted?
+                          :dealer_busted
+                        elsif player.hand.total > dealer.hand.total
+                          :player_won
+                        elsif dealer.hand.total > player.hand.total
+                          :dealer_won
+                        else
+                          :tie
+                        end
   end
 
   def update_score
-    case result
+    case round_result
     when :player_busted, :dealer_won
       dealer.increment_score
     when :dealer_busted, :player_won
@@ -407,8 +411,8 @@ class Game
 
   def reset_round
     deck.reset
-    player.reset_hand
-    dealer.reset_hand
+    player.hand.reset
+    dealer.hand.reset
   end
 
   def reset_game

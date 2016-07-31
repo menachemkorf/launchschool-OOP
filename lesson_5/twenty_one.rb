@@ -134,13 +134,21 @@ class Participant
     reset
   end
 
+  def total_hand
+    hand.total
+  end
+
   def increment_score
     self.score += 1
   end
 
   def reset
+    reset_hand
+    reset_score
+  end
+
+  def reset_hand
     hand.reset
-    self.score = 0
   end
 
   def hit?
@@ -149,6 +157,18 @@ class Participant
 
   def stay?
     choice == 's'
+  end
+
+  def busted?
+    hand.busted?
+  end
+
+  def show_all_cards
+    hand.show_all_cards
+  end
+
+  def show_first_card
+    hand.show_first_card
   end
 
   def to_s
@@ -171,6 +191,10 @@ class Participant
 
   attr_writer :score, :name
   attr_accessor :choice
+
+  def reset_score
+    self.score = 0
+  end
 end
 
 class Player < Participant
@@ -253,17 +277,17 @@ module Displayable
 
   def display_player_cards
     puts "#{player}'s cards:"
-    player.hand.show_all_cards
-    puts "Total = #{player.hand.total}"
+    player.show_all_cards
+    puts "Total = #{player.total_hand}"
   end
 
   def display_dealer_cards(options)
     puts "#{dealer}'s cards:"
     if options == :partial
-      dealer.hand.show_first_card
+      dealer.show_first_card
     else
-      dealer.hand.show_all_cards
-      puts "Total = #{dealer.hand.total}"
+      dealer.show_all_cards
+      puts "Total = #{dealer.total_hand}"
     end
   end
 
@@ -352,7 +376,7 @@ class Game
     deal_cards
     display_cards(:partial)
     player_turn
-    dealer_turn unless player.hand.busted?
+    dealer_turn unless player.busted?
     detect_result
     update_score
     display_result
@@ -370,22 +394,22 @@ class Game
         deck.deal(player)
         display_cards(:partial)
       end
-      break if player.stay? || player.hand.busted?
+      break if player.stay? || player.busted?
     end
   end
 
   def dealer_turn
-    deck.deal(dealer) until dealer.hand.total >= DEALER_STAYS
+    deck.deal(dealer) until dealer.total_hand >= DEALER_STAYS
   end
 
   def detect_result
-    self.round_result = if player.hand.busted?
+    self.round_result = if player.busted?
                           :player_busted
-                        elsif dealer.hand.busted?
+                        elsif dealer.busted?
                           :dealer_busted
-                        elsif player.hand.total > dealer.hand.total
+                        elsif player.total_hand > dealer.total_hand
                           :player_won
-                        elsif dealer.hand.total > player.hand.total
+                        elsif dealer.total_hand > player.total_hand
                           :dealer_won
                         else
                           :tie
@@ -411,8 +435,8 @@ class Game
 
   def reset_round
     deck.reset
-    player.hand.reset
-    dealer.hand.reset
+    player.reset_hand
+    dealer.reset_hand
   end
 
   def reset_game
